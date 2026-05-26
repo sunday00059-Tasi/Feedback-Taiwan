@@ -35,6 +35,7 @@ body {
     width: 100%;
     position: fixed;
     overflow: hidden;
+    touch-action: none;
 }
 
 /* 捲軸美化 */
@@ -572,6 +573,8 @@ body {
     flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y;
     padding: 24px;
     display: flex;
     flex-direction: column;
@@ -1249,14 +1252,18 @@ body {
         height: 180px;
         border-right: none;
         border-bottom: 1px solid var(--border-color);
-        display: flex;
-        flex-direction: column;
+        display: block;
         flex-shrink: 0;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
+        overscroll-behavior-y: contain;
+        touch-action: pan-y;
     }
     .sidebar-section {
         padding: 8px 16px;
+        flex: none !important;
+        max-height: none !important;
+        overflow-y: visible !important;
     }
     .sidebar-section h3 {
         margin-bottom: 6px;
