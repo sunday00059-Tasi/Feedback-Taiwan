@@ -124,29 +124,52 @@ function setupFirebaseListeners() {
     firebaseListenersAttached = true;
 
     // ── 監聽訊息變動 ──
+    let isFirstMessagesLoad = true;
     db.ref("messages").orderByChild("timestamp").on("value", (snapshot) => {
         const data = snapshot.val();
+        let newMessagesArray = [];
         if (data) {
-            appState.messages = Object.values(data).sort(
+            newMessagesArray = Object.values(data).sort(
                 (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
             );
-        } else {
-            appState.messages = [];
         }
-        renderMessages();
-
-        // 播放音效（如果最後一條不是自己的）
-        if (appState.messages.length > 0) {
-            const lastMsg = appState.messages[appState.messages.length - 1];
-            if (lastMsg && lastMsg.senderId !== appState.activeUserSim && !lastMsg.isSystem) {
-                const isInCurrentChannel =
-                    lastMsg.channel === appState.activeChannel ||
-                    (appState.activeChannel.startsWith("private_") &&
-                        lastMsg.channel === `private_${appState.activeUserSim}`);
-                if (isInCurrentChannel) {
-                    try { sound.playNotification(); } catch (e) {}
+        
+        // 處理未讀與通知
+        if (!isFirstMessagesLoad) {
+            const existingIds = new Set(appState.messages.map(m => m.id));
+            const newlyAdded = newMessagesArray.filter(m => !existingIds.has(m.id));
+            
+            newlyAdded.forEach(msg => {
+                if (msg.senderId !== appState.activeUserSim && !msg.isSystem) {
+                    if (msg.channel === "public") {
+                        if (appState.activeChannel !== "public") {
+                            appState.unreadCounts["public"] = (appState.unreadCounts["public"] || 0) + 1;
+                        }
+                        try { sound.playNotification(); } catch (e) {}
+                    } else if (msg.channel === `private_${appState.activeUserSim}`) {
+                        // 這是一條私訊「傳給我」的訊息
+                        const sourceChannelForMe = `private_${msg.senderId}`;
+                        if (appState.activeChannel !== sourceChannelForMe) {
+                            appState.unreadCounts[sourceChannelForMe] = (appState.unreadCounts[sourceChannelForMe] || 0) + 1;
+                        }
+                        try { sound.playNotification(); } catch (e) {}
+                    }
                 }
-            }
+            });
+        }
+        
+        appState.messages = newMessagesArray;
+        isFirstMessagesLoad = false;
+        
+        renderMessages();
+        renderPrivateChannels(); // 更新側邊欄，讓剛收到私聊的頻道顯示出來並顯示未讀
+        
+        // 更新大廳未讀標記
+        const unreadPublicBadge = document.getElementById("unread-public");
+        if (unreadPublicBadge) {
+            const count = appState.unreadCounts["public"] || 0;
+            unreadPublicBadge.style.display = count > 0 ? "" : "none";
+            unreadPublicBadge.textContent = count;
         }
     });
 
