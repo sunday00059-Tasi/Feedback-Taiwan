@@ -137,23 +137,7 @@ function setupFirebaseListeners() {
         
         // 處理未讀與通知
         if (isFirstMessagesLoad) {
-            newMessagesArray.forEach(msg => {
-                if (msg.senderId !== appState.activeUserSim && !msg.isSystem) {
-                    let targetChan = "";
-                    if (msg.channel === "public") {
-                        targetChan = "public";
-                    } else if (msg.channel === `private_${appState.activeUserSim}`) {
-                        targetChan = `private_${msg.senderId}`;
-                    }
-                    
-                    if (targetChan && targetChan !== appState.activeChannel) {
-                        const lrTime = appState.lastRead[targetChan] || "1970-01-01T00:00:00.000Z";
-                        if (new Date(msg.timestamp) > new Date(lrTime)) {
-                            appState.unreadCounts[targetChan] = (appState.unreadCounts[targetChan] || 0) + 1;
-                        }
-                    }
-                }
-            });
+            recalculateUnreadCounts();
         } else {
             const existingIds = new Set(appState.messages.map(m => m.id));
             const newlyAdded = newMessagesArray.filter(m => !existingIds.has(m.id));
@@ -919,6 +903,8 @@ function enterApp() {
     renderRegisteredAccountsForAdmin();
     switchChannel("public");
 
+    recalculateUnreadCounts();
+
     sendSystemNotice(`成員 [${appState.currentUser.name}] 已進入聊天室。`);
 }
 
@@ -1442,6 +1428,34 @@ function clearUnread(channelId) {
     let badgeId = channelId === "public" ? "unread-public" : `unread-priv-${channelId.replace("private_", "")}`;
     const badge = document.getElementById(badgeId);
     if (badge) badge.style.display = "none";
+}
+
+function recalculateUnreadCounts() {
+    if (!appState.currentUser || !appState.activeUserSim) return;
+    
+    appState.unreadCounts = {};
+    appState.messages.forEach(msg => {
+        if (msg.senderId !== appState.activeUserSim && !msg.isSystem) {
+            let targetChan = "";
+            if (msg.channel === "public") targetChan = "public";
+            else if (msg.channel === `private_${appState.activeUserSim}`) targetChan = `private_${msg.senderId}`;
+            
+            if (targetChan && targetChan !== appState.activeChannel) {
+                const lrTime = appState.lastRead[targetChan] || "1970-01-01T00:00:00.000Z";
+                if (new Date(msg.timestamp) > new Date(lrTime)) {
+                    appState.unreadCounts[targetChan] = (appState.unreadCounts[targetChan] || 0) + 1;
+                }
+            }
+        }
+    });
+    
+    // 更新公頻未讀標籤
+    const unreadPublicBadge = document.getElementById("unread-public");
+    if (unreadPublicBadge) {
+        const count = appState.unreadCounts["public"] || 0;
+        unreadPublicBadge.style.display = count > 0 ? "" : "none";
+        unreadPublicBadge.textContent = count;
+    }
 }
 
 // -----------------------------------------------------------
