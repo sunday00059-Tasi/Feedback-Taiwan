@@ -1401,7 +1401,8 @@ function handleClearChannelHistory() {
 // -----------------------------------------------------------
 function clearUnread(channelId) {
     appState.unreadCounts[channelId] = 0;
-    const badge = document.getElementById(`unread-priv-${channelId.replace("private_", "")}`);
+    let badgeId = channelId === "public" ? "unread-public" : `unread-priv-${channelId.replace("private_", "")}`;
+    const badge = document.getElementById(badgeId);
     if (badge) badge.style.display = "none";
 }
 
