@@ -1175,11 +1175,7 @@ async function sendMessage() {
             }
         }
 
-        // 私聊通知
-        if (channel.startsWith("private_")) {
-            const targetId = channel.replace("private_", "");
-            triggerNotificationForSimulator(targetId, channel);
-        }
+        // 私聊通知已交由 db.ref("messages").on("value") 負責跨端處理，不需在發送端增加未讀
 
     } catch (err) {
         console.error("翻譯失敗:", err);
@@ -1407,17 +1403,6 @@ function clearUnread(channelId) {
     appState.unreadCounts[channelId] = 0;
     const badge = document.getElementById(`unread-priv-${channelId.replace("private_", "")}`);
     if (badge) badge.style.display = "none";
-}
-
-function triggerNotificationForSimulator(targetUserId, channelId) {
-    if (appState.activeUserSim === targetUserId) {
-        try { sound.playNotification(); } catch (e) {}
-        renderMessages();
-    } else {
-        appState.unreadCounts[channelId] = (appState.unreadCounts[channelId] || 0) + 1;
-        try { sound.playNotification(); } catch (e) {}
-        renderPrivateChannels();
-    }
 }
 
 // -----------------------------------------------------------
