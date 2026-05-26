@@ -72,6 +72,40 @@ let appState = {
     lastRead: {}
 };
 
+// -----------------------------------------------------------
+//  視窗標題閃爍提醒 (背景通知)
+// -----------------------------------------------------------
+let originalTitle = document.title || "即時通訊與翻譯";
+let titleFlashInterval = null;
+
+function startTitleFlash() {
+    if (titleFlashInterval) return;
+    let showNew = true;
+    titleFlashInterval = setInterval(() => {
+        document.title = showNew ? "💬 您有新訊息！" : originalTitle;
+        showNew = !showNew;
+    }, 1000);
+}
+
+function stopTitleFlash() {
+    if (titleFlashInterval) {
+        clearInterval(titleFlashInterval);
+        titleFlashInterval = null;
+    }
+    document.title = originalTitle;
+}
+
+window.addEventListener("focus", stopTitleFlash);
+window.addEventListener("mousemove", stopTitleFlash);
+window.addEventListener("click", stopTitleFlash);
+
+function playNotificationSound() {
+    try { sound.playNotification(); } catch (e) {}
+    if (!document.hasFocus()) {
+        startTitleFlash();
+    }
+}
+
 let firebaseReady = false;
 let db = null; // Firebase database reference
 let firebaseListenersAttached = false;
@@ -148,14 +182,14 @@ function setupFirebaseListeners() {
                         if (appState.activeChannel !== "public") {
                             appState.unreadCounts["public"] = (appState.unreadCounts["public"] || 0) + 1;
                         }
-                        try { sound.playNotification(); } catch (e) {}
+                        playNotificationSound();
                     } else if (msg.channel === `private_${appState.activeUserSim}`) {
                         // 這是一條私訊「傳給我」的訊息
                         const sourceChannelForMe = `private_${msg.senderId}`;
                         if (appState.activeChannel !== sourceChannelForMe) {
                             appState.unreadCounts[sourceChannelForMe] = (appState.unreadCounts[sourceChannelForMe] || 0) + 1;
                         }
-                        try { sound.playNotification(); } catch (e) {}
+                        playNotificationSound();
                     }
                 }
             });
