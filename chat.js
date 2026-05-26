@@ -68,7 +68,8 @@ let appState = {
     accounts: [],
     apiKey: "",
     apiModel: "gemini-2.0-flash",
-    unreadCounts: {}
+    unreadCounts: {},
+    lastRead: {}
 };
 
 let firebaseReady = false;
@@ -135,7 +136,25 @@ function setupFirebaseListeners() {
         }
         
         // 處理未讀與通知
-        if (!isFirstMessagesLoad) {
+        if (isFirstMessagesLoad) {
+            newMessagesArray.forEach(msg => {
+                if (msg.senderId !== appState.activeUserSim && !msg.isSystem) {
+                    let targetChan = "";
+                    if (msg.channel === "public") {
+                        targetChan = "public";
+                    } else if (msg.channel === `private_${appState.activeUserSim}`) {
+                        targetChan = `private_${msg.senderId}`;
+                    }
+                    
+                    if (targetChan && targetChan !== appState.activeChannel) {
+                        const lrTime = appState.lastRead[targetChan] || "1970-01-01T00:00:00.000Z";
+                        if (new Date(msg.timestamp) > new Date(lrTime)) {
+                            appState.unreadCounts[targetChan] = (appState.unreadCounts[targetChan] || 0) + 1;
+                        }
+                    }
+                }
+            });
+        } else {
             const existingIds = new Set(appState.messages.map(m => m.id));
             const newlyAdded = newMessagesArray.filter(m => !existingIds.has(m.id));
             
@@ -160,6 +179,12 @@ function setupFirebaseListeners() {
         
         appState.messages = newMessagesArray;
         isFirstMessagesLoad = false;
+        
+        // 若停留在當前頻道，順便更新該頻道的最後讀取時間
+        if (appState.activeChannel && appState.currentUser) {
+            appState.lastRead[appState.activeChannel] = new Date().toISOString();
+            localStorage.setItem(`feedback_chat_last_read_${appState.currentUser.id}`, JSON.stringify(appState.lastRead));
+        }
         
         renderMessages();
         renderPrivateChannels(); // 更新側邊欄，讓剛收到私聊的頻道顯示出來並顯示未讀
@@ -875,6 +900,13 @@ function enterApp() {
     chatDom.loginContainer.style.display = "none";
     chatDom.appContainer.style.display = "flex";
 
+    const savedLastRead = localStorage.getItem(`feedback_chat_last_read_${appState.currentUser.id}`);
+    if (savedLastRead) {
+        try { appState.lastRead = JSON.parse(savedLastRead); } catch(e) { appState.lastRead = {}; }
+    } else {
+        appState.lastRead = {};
+    }
+
     chatDom.currentUserAvatar.textContent = appState.currentUser.name.charAt(0);
     chatDom.currentUsername.textContent = appState.currentUser.name;
     chatDom.currentUserRole.textContent = appState.currentUser.role;
@@ -1007,6 +1039,12 @@ window.switchLoginTab = function(tab) {
 // -----------------------------------------------------------
 function switchChannel(channelId) {
     appState.activeChannel = channelId;
+    
+    if (appState.currentUser) {
+        appState.lastRead[channelId] = new Date().toISOString();
+        localStorage.setItem(`feedback_chat_last_read_${appState.currentUser.id}`, JSON.stringify(appState.lastRead));
+    }
+    
     clearUnread(channelId);
 
     document.querySelectorAll(".channel-item, .user-item").forEach(item => {
