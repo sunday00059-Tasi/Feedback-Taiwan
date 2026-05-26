@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback Translation Link | 翔名中日即時翻譯通</title>
+    <meta name="description" content="專為製造業現場設計的中日文雙向即時翻譯聊天室，支援公聊、私聊與管理員控制。">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Outfit:wght@300;400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="chat.css">
+</head>
+<body>
+    <!-- 登入畫面 -->
+    <div id="login-container" class="login-wrapper">
+        <div class="login-card">
+            <div class="login-logo">
+                <i class="fa-solid fa-language logo-glow-icon"></i>
+                <h2>Feedback Link</h2>
+                <p>中日雙向即時翻譯聊天室</p>
+            </div>
+            
+            <!-- 登入/註冊切換頁籤 -->
+            <div class="login-tabs">
+                <button id="tab-login" class="tab-btn active" onclick="switchLoginTab('login')">帳號登入</button>
+                <button id="tab-register" class="tab-btn" onclick="switchLoginTab('register')">註冊新帳號</button>
+            </div>
+            
+            <!-- 登入表單 -->
+            <div class="login-form-panel" id="form-login-panel">
+                <div class="form-group">
+                    <label for="login-user-id"><i class="fa-solid fa-user-tag"></i> 身分 ID</label>
+                    <input type="text" id="login-user-id" placeholder="請輸入已建立的 ID" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="login-password"><i class="fa-solid fa-lock"></i> 密碼</label>
+                    <input type="password" id="login-password" placeholder="請輸入密碼 (一般用戶為 4 位數字)" required autocomplete="off">
+                </div>
+                <button id="btn-login" class="btn btn-primary btn-full mt-3">
+                    <i class="fa-solid fa-door-open"></i> 登入系統
+                </button>
+            </div>
+            
+            <!-- 註冊表單 (預設隱藏) -->
+            <div class="login-form-panel" id="form-register-panel" style="display: none;">
+                <div class="form-group">
+                    <label for="register-user-id"><i class="fa-solid fa-user-plus"></i> 新身分 ID <span class="required">*</span></label>
+                    <input type="text" id="register-user-id" placeholder="例如：Sato、王工程師" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="register-password"><i class="fa-solid fa-key"></i> 請輸入 4 位數字密碼 <span class="required">*</span></label>
+                    <input type="password" id="register-password" maxlength="4" pattern="\d{4}" placeholder="例如：1234" required autocomplete="off">
+                </div>
+                <button id="btn-register" class="btn btn-success btn-full mt-3">
+                    <i class="fa-solid fa-user-check"></i> 建立帳號並登入
+                </button>
+            </div>
+            
+            <div class="login-footer">
+                <p>預設管理員 ID: <span>Feedback管理員</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 聊天主介面 (預設隱藏) -->
+    <div id="app-container" class="chat-app-container" style="display: none;">
+        <!-- 頂部資訊列 -->
+        <header class="chat-header">
+            <div class="header-logo">
+                <i class="fa-solid fa-helmet-safety header-icon"></i>
+                <div class="header-title">
+                    <h2>Feedback Translation Link</h2>
+                    <span>製造業現場中日雙向即時翻譯大廳</span>
+                </div>
+            </div>
+            
+            <div class="header-right">
+
+                
+                <div class="api-badge-wrap">
+                    <span id="chat-api-badge" class="api-badge red"><i class="fa-solid fa-circle"></i> API 未設定</span>
+                </div>
+                
+                <div class="current-user-info">
+                    <span class="user-avatar" id="current-user-avatar">?</span>
+                    <div class="user-details">
+                        <span id="current-username" class="username">未登入</span>
+                        <span id="current-user-role" class="user-role">操作員</span>
+                    </div>
+                </div>
+                
+                <button id="btn-logout" class="btn btn-outline btn-xs" title="登出">
+                    <i class="fa-solid fa-power-off"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- 聊天室主體 -->
+        <div class="chat-body">
+            <!-- 1. 左側邊欄：頻道與在線列表 -->
+            <aside class="chat-sidebar">
+                <!-- 頻道清單 -->
+                <div class="sidebar-section">
+                    <h3><i class="fa-solid fa-hashtag"></i> 聊天頻道</h3>
+                    <ul class="channel-list">
+                        <li class="channel-item active" data-channel="public">
+                            <i class="fa-solid fa-bullhorn"></i> 
+                            <span>📢 公開大廳</span>
+                            <span class="badge-unread" id="unread-public" style="display: none;">0</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- 私人密聊列表 -->
+                <div class="sidebar-section flex-1 overflow-y">
+                    <div class="section-title">
+                        <h3><i class="fa-solid fa-comment-dots"></i> 私人密聊</h3>
+                    </div>
+                    <ul class="channel-list" id="private-chats-list">
+                        <!-- 動態載入私聊清單 -->
+                    </ul>
+                </div>
+
+                <!-- 在線成員清單 -->
+                <div class="sidebar-section max-h-200">
+                    <h3><i class="fa-solid fa-users"></i> 目前在線成員</h3>
+                    <ul class="user-list" id="online-users-list">
+                        <!-- 動態載入在線成員 -->
+                    </ul>
+                </div>
+
+                <!-- 帳號管理清單 (僅管理員可見) -->
+                <div class="sidebar-section flex-1 overflow-y" id="admin-user-manager-section" style="display: none;">
+                    <h3><i class="fa-solid fa-users-gear"></i> 帳號管理 (管理員)</h3>
+                    <ul class="user-list" id="registered-users-list">
+                        <!-- 動態載入已註冊帳號列表與刪除按鈕 -->
+                    </ul>
+                </div>
+            </aside>
+
+            <!-- 2. 中間：主要聊天視窗 -->
+            <main class="chat-window">
+                <!-- 聊天視窗頭部 -->
+                <div class="chat-window-header">
+                    <div class="channel-info">
+                        <h3 id="active-chat-title">📢 公開大廳</h3>
+                        <p id="active-chat-desc">本頻道的發言將會自動翻譯，所有人皆可看見。</p>
+                    </div>
+                    
+                    <!-- 管理員專屬面板 (僅管理員可見) -->
+                    <div class="admin-panel-control" id="admin-controls" style="display: none;">
+                        <span class="admin-label"><i class="fa-solid fa-shield-halved"></i> 管理功能：</span>
+                        <button id="btn-clear-chat" class="btn btn-danger btn-xs">
+                            <i class="fa-solid fa-trash-can"></i> 清空此對話歷史
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 訊息滾動區 -->
+                <div class="messages-container" id="messages-container">
+                    <!-- 這裡會動態載入訊息 -->
+                    <div class="chat-start-notice">
+                        <i class="fa-regular fa-comment-dots"></i>
+                        <p>對話開始，輸入的訊息將透過 Gemini 進行中日文即時雙向翻譯。</p>
+                    </div>
+                </div>
+
+                <!-- 輸入區 -->
+                <footer class="chat-footer">
+                    <!-- 製造業現場常用短語快速輸入 -->
+                    <div class="quick-phrases-bar">
+                        <span class="quick-label">現場常用語：</span>
+                        <div class="quick-phrases-container">
+                            <button class="quick-phrase-btn">機台發生故障，請求支援。</button>
+                            <button class="quick-phrase-btn">品質檢驗已完成，全部合格。</button>
+                            <button class="quick-phrase-btn">正在進行線切割加工製程。</button>
+                            <button class="quick-phrase-btn">設備清潔與放電加工準備完成。</button>
+                            <button class="quick-phrase-btn">設備のエラーが発生しました。</button>
+                            <button class="quick-phrase-btn">製品の検査が完了しました。</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 輸入控制列 -->
+                    <div class="input-controls">
+                        <div class="lang-detector-badge">
+                            <span class="dot pulse"></span>
+                            <span id="detector-text">自動語言偵測中...</span>
+                        </div>
+                    </div>
+
+                    <!-- 訊息輸入表單 -->
+                    <div class="input-form">
+                        <textarea id="chat-message-input" rows="2" placeholder="輸入中文會自動翻成日文，輸入日文會翻成中文... 按 Enter 傳送" autocomplete="off"></textarea>
+                        <button id="btn-send-message" class="btn btn-primary" title="發送訊息">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </footer>
+            </main>
+        </div>
+    </div>
+
+    <!-- 提示音效 (使用 Web Audio API 生成，不需外部檔案) -->
+    <script>
+        // 音效管理器
+        const sound = {
+            ctx: null,
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            },
+            playNotification() {
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, now); // D5
+                osc.frequency.setValueAtTime(880.00, now + 0.1); // A5
+                
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                
+                osc.start(now);
+                osc.stop(now + 0.3);
+            }
+        };
+    </script>
+    <!-- Firebase SDK (跨瀏覽器即時同步) -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+    <script src="chat.js"></script>
+</body>
+</html>
