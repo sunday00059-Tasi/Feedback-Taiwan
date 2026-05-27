@@ -172,14 +172,14 @@
                 <footer class="chat-footer">
                     <!-- 製造業現場常用短語快速輸入 -->
                     <div class="quick-phrases-bar">
-                        <span class="quick-label">現場常用語：</span>
-                        <div class="quick-phrases-container">
-                            <button class="quick-phrase-btn">機台發生故障，請求支援。</button>
-                            <button class="quick-phrase-btn">品質檢驗已完成，全部合格。</button>
-                            <button class="quick-phrase-btn">正在進行線切割加工製程。</button>
-                            <button class="quick-phrase-btn">設備清潔與放電加工準備完成。</button>
-                            <button class="quick-phrase-btn">設備のエラーが発生しました。</button>
-                            <button class="quick-phrase-btn">製品の検査が完了しました。</button>
+                        <span class="quick-label" style="display: flex; align-items: center;">
+                            現場常用語：
+                            <button id="btn-edit-quick-phrases" class="btn btn-xs btn-outline" style="display: none; padding: 2px 6px; margin-left: 4px;" title="編輯常用語 (僅管理員)" onclick="openEditQuickPhrasesModal()">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                        </span>
+                        <div class="quick-phrases-container" id="quick-phrases-container">
+                            <!-- 動態載入常用語 -->
                         </div>
                     </div>
                     
@@ -200,6 +200,31 @@
                     </div>
                 </footer>
             </main>
+        </div>
+    </div>
+
+    <!-- 編輯常用語對話框 (預設隱藏) -->
+    <div id="edit-quick-phrases-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-pen-to-square" style="color: var(--accent-blue);"></i> 編輯現場常用語</h3>
+                <button class="modal-close" onclick="closeEditQuickPhrasesModal()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">新增、修改或刪除下方列表中的現場常用語。變更將即時同步給所有連線中的使用者。</p>
+                <div id="quick-phrases-edit-list" style="display: flex; flex-direction: column; gap: 8px;">
+                    <!-- 動態載入編輯輸入框 -->
+                </div>
+                <button class="btn btn-outline btn-full mt-3" onclick="addQuickPhraseInput()">
+                    <i class="fa-solid fa-plus"></i> 新增一列
+                </button>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEditQuickPhrasesModal()" style="margin-right: 12px;">取消</button>
+                <button class="btn btn-primary" onclick="saveQuickPhrases()">儲存變更</button>
+            </div>
         </div>
     </div>
 

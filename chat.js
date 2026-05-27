@@ -66,6 +66,7 @@ let appState = {
     messages: [],
     users: [],
     accounts: [],
+    quickPhrases: [],
     apiKey: "",
     apiModel: "gemini-2.0-flash",
     unreadCounts: {},
@@ -242,6 +243,28 @@ function setupFirebaseListeners() {
         renderOnlineUsers();
         renderPrivateChannels();
         fillSimulatorSelect();
+    });
+
+    // ── 監聽現場常用語變動 ──
+    db.ref("quick_phrases").on("value", (snapshot) => {
+        const data = snapshot.val();
+        if (data && Array.isArray(data)) {
+            appState.quickPhrases = data;
+        } else {
+            // 寫入預設值
+            appState.quickPhrases = [
+                "機台發生故障，請求支援。",
+                "品質檢驗已完成，全部合格。",
+                "正在進行線切割加工製程。",
+                "設備清潔與放電加工準備完成。",
+                "設備のエラーが発生しました。",
+                "製品の検査が完了しました。"
+            ];
+            db.ref("quick_phrases").set(appState.quickPhrases);
+        }
+        if (typeof renderQuickPhrases === "function") {
+            renderQuickPhrases();
+        }
     });
 }
 
@@ -972,12 +995,16 @@ function fillSimulatorSelect() {
 function updateAdminPanelUI() {
     const adminControls = document.getElementById("admin-controls");
     const adminUserManagerSection = document.getElementById("admin-user-manager-section");
+    const btnEditQuickPhrases = document.getElementById("btn-edit-quick-phrases");
+    
     if (appState.currentUser && appState.currentUser.role === "管理員") {
         if (adminControls) adminControls.style.display = "flex";
         if (adminUserManagerSection) adminUserManagerSection.style.display = "block";
+        if (btnEditQuickPhrases) btnEditQuickPhrases.style.display = "inline-block";
     } else {
         if (adminControls) adminControls.style.display = "none";
         if (adminUserManagerSection) adminUserManagerSection.style.display = "none";
+        if (btnEditQuickPhrases) btnEditQuickPhrases.style.display = "none";
     }
 }
 
@@ -1580,3 +1607,111 @@ function simulateOtherUsersAction() {
         }
     }
 }
+
+// -----------------------------------------------------------
+//  現場常用語管理 (Quick Phrases)
+// -----------------------------------------------------------
+window.renderQuickPhrases = function() {
+    const container = document.getElementById("quick-phrases-container");
+    if (!container) return;
+    
+    container.innerHTML = "";
+    appState.quickPhrases.forEach(phrase => {
+        if (!phrase.trim()) return;
+        const btn = document.createElement("button");
+        btn.className = "quick-phrase-btn";
+        btn.textContent = phrase;
+        btn.onclick = () => {
+            const input = document.getElementById("chat-message-input");
+            if (input) {
+                if (input.value && !input.value.endsWith(" ")) {
+                    input.value += " " + phrase;
+                } else {
+                    input.value += phrase;
+                }
+                input.focus();
+            }
+        };
+        container.appendChild(btn);
+    });
+};
+
+window.openEditQuickPhrasesModal = function() {
+    const modal = document.getElementById("edit-quick-phrases-modal");
+    if (!modal) return;
+    
+    const listEl = document.getElementById("quick-phrases-edit-list");
+    listEl.innerHTML = "";
+    
+    appState.quickPhrases.forEach(phrase => {
+        if (phrase.trim()) {
+            listEl.appendChild(createQuickPhraseEditRow(phrase));
+        }
+    });
+    
+    modal.style.display = "flex";
+};
+
+window.closeEditQuickPhrasesModal = function() {
+    const modal = document.getElementById("edit-quick-phrases-modal");
+    if (modal) modal.style.display = "none";
+};
+
+window.createQuickPhraseEditRow = function(value = "") {
+    const row = document.createElement("div");
+    row.className = "quick-phrase-edit-row";
+    
+    const input = document.createElement("input");
+    input.type = "text";
+    input.value = value;
+    input.placeholder = "請輸入常用語...";
+    
+    const delBtn = document.createElement("button");
+    delBtn.className = "btn-remove";
+    delBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+    delBtn.onclick = () => {
+        row.remove();
+    };
+    
+    row.appendChild(input);
+    row.appendChild(delBtn);
+    return row;
+};
+
+window.addQuickPhraseInput = function() {
+    const listEl = document.getElementById("quick-phrases-edit-list");
+    if (listEl) {
+        listEl.appendChild(createQuickPhraseEditRow(""));
+    }
+};
+
+window.saveQuickPhrases = function() {
+    const listEl = document.getElementById("quick-phrases-edit-list");
+    if (!listEl) return;
+    
+    const inputs = listEl.querySelectorAll("input[type='text']");
+    const newPhrases = [];
+    inputs.forEach(input => {
+        const val = input.value.trim();
+        if (val) {
+            newPhrases.push(val);
+        }
+    });
+    
+    if (newPhrases.length === 0) {
+        alert("至少需要保留一組常用語。");
+        return;
+    }
+    
+    if (db) {
+        db.ref("quick_phrases").set(newPhrases)
+            .then(() => {
+                showToast("常用語更新成功", "success");
+                closeEditQuickPhrasesModal();
+            })
+            .catch(err => {
+                console.error("更新常用語失敗", err);
+                showToast("更新常用語失敗", "error");
+            });
+    }
+};
