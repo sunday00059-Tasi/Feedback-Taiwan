@@ -225,7 +225,8 @@ let appState = {
     groqKey: localStorage.getItem("feedback_groq_key") || "",
     unreadCounts: {},
     lastRead: {},
-    uiLanguage: localStorage.getItem("feedback_chat_ui_lang") || "zh-TW"
+    uiLanguage: localStorage.getItem("feedback_chat_ui_lang") || "zh-TW",
+    hideSystemMessages: localStorage.getItem("hide_system_messages") === "1"
 };
 
 function t(key, params = {}) {
@@ -941,6 +942,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     setupChatEventListeners();
+    applySystemMessageState();
 
     // Firebase 未設定時顯示提示（不阻止使用）
     if (!fbOk) {
@@ -2142,5 +2144,30 @@ window.toggleMobileSidebar = function(forceState) {
     } else {
         sidebar.classList.remove("sidebar-active");
         overlay.classList.remove("active");
+    }
+};
+
+// -----------------------------------------------------------
+//  隱藏/顯示系統登入訊息
+// -----------------------------------------------------------
+window.toggleSystemMessages = function() {
+    appState.hideSystemMessages = !appState.hideSystemMessages;
+    localStorage.setItem("hide_system_messages", appState.hideSystemMessages ? "1" : "0");
+    applySystemMessageState();
+};
+
+window.applySystemMessageState = function() {
+    const icon = document.getElementById("sysmsg-icon");
+    const text = document.getElementById("sysmsg-text");
+    if (!icon || !text) return;
+    
+    if (appState.hideSystemMessages) {
+        icon.className = "fa-solid fa-eye";
+        text.textContent = "顯示登入訊息";
+        document.body.classList.add("hide-system-messages");
+    } else {
+        icon.className = "fa-solid fa-eye-slash";
+        text.textContent = "隱藏登入訊息";
+        document.body.classList.remove("hide-system-messages");
     }
 };

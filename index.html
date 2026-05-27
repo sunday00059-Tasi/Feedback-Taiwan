@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Outfit:wght@300;400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <!-- FontAwesome icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="chat.css?v=5.1">
+    <link rel="stylesheet" href="chat.css?v=5.2">
 </head>
 <body>
     <!-- 登入畫面 -->
@@ -85,7 +85,7 @@
                 <div class="header-title">
                     <h2 style="display: flex; align-items: center; gap: 8px;">
                         Feedback Translation Link
-                        <span class="version-badge" style="background: var(--accent-blue); color: #fff; font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; font-weight: 800; letter-spacing: 1px;">V5.1</span>
+                        <span class="version-badge" style="background: var(--accent-blue); color: #fff; font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; font-weight: 800; letter-spacing: 1px;">V5.2</span>
                     </h2>
                     <span data-i18n="app_subtitle">製造業現場中日雙向即時翻譯大廳</span>
                 </div>
@@ -176,12 +176,18 @@
                         </div>
                     </div>
                     
-                    <!-- 管理員專屬面板 (僅管理員可見) -->
-                    <div class="admin-panel-control" id="admin-controls" style="display: none;">
-                        <span class="admin-label"><i class="fa-solid fa-shield-halved"></i> <span data-i18n="admin_functions">管理功能：</span></span>
-                        <button id="btn-clear-chat" class="btn btn-danger btn-xs">
-                            <i class="fa-solid fa-trash-can"></i> <span data-i18n="clear_history">清空此對話歷史</span>
+                    <div class="header-actions" style="margin-left: auto; display: flex; gap: 8px; align-items: center;">
+                        <button id="btn-toggle-sysmsg" class="btn btn-outline" style="padding: 4px 10px; font-size: 0.85rem; border-radius: 6px;" onclick="toggleSystemMessages()">
+                            <i class="fa-solid fa-eye-slash" id="sysmsg-icon"></i> <span id="sysmsg-text">隱藏登入訊息</span>
                         </button>
+                        
+                        <!-- 管理員專屬面板 (僅管理員可見) -->
+                        <div class="admin-panel-control" id="admin-controls" style="display: none; margin: 0;">
+                            <span class="admin-label"><i class="fa-solid fa-shield-halved"></i></span>
+                            <button id="btn-clear-chat" class="btn btn-danger btn-xs" style="padding: 4px 10px; font-size: 0.85rem;">
+                                <i class="fa-solid fa-trash-can"></i> <span data-i18n="clear_history">清空此對話</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -330,6 +336,6 @@
     <!-- Firebase SDK (跨瀏覽器即時同步) -->
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
-    <script src="chat.js?v=5.1"></script>
+    <script src="chat.js?v=5.2"></script>
 </body>
 </html>
