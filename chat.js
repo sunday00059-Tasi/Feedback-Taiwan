@@ -1115,6 +1115,11 @@ function switchChannel(channelId) {
     }
 
     renderMessages();
+    
+    // 手機版：切換頻道後自動收回側邊欄
+    if (typeof window.toggleMobileSidebar === "function") {
+        window.toggleMobileSidebar(false);
+    }
 }
 
 // -----------------------------------------------------------
@@ -1713,5 +1718,25 @@ window.saveQuickPhrases = function() {
                 console.error("更新常用語失敗", err);
                 showToast("更新常用語失敗", "error");
             });
+    }
+};
+
+// -----------------------------------------------------------
+//  手機版側邊欄控制
+// -----------------------------------------------------------
+window.toggleMobileSidebar = function(forceState) {
+    const sidebar = document.getElementById("chat-sidebar");
+    const overlay = document.getElementById("sidebar-overlay");
+    if (!sidebar || !overlay) return;
+    
+    const isActive = sidebar.classList.contains("sidebar-active");
+    const nextState = forceState !== undefined ? forceState : !isActive;
+    
+    if (nextState) {
+        sidebar.classList.add("sidebar-active");
+        overlay.classList.add("active");
+    } else {
+        sidebar.classList.remove("sidebar-active");
+        overlay.classList.remove("active");
     }
 };

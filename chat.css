@@ -1289,22 +1289,45 @@ body {
     margin-top: 12px;
 }
 
+/* --- 側滑選單遮罩 --- */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    z-index: 3500;
+}
+.sidebar-overlay.active {
+    display: block;
+    animation: fadeIn 0.3s ease-out;
+}
+
 /* --- 手機版 RWD 響應式排版 --- */
 @media (max-width: 768px) {
-    .chat-body {
-        flex-direction: column;
+    #mobile-menu-btn {
+        display: inline-block !important;
     }
     .chat-sidebar {
-        width: 100%;
-        height: 180px;
-        border-right: none;
-        border-bottom: 1px solid var(--border-color);
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 280px;
+        height: 100%;
+        z-index: 4000;
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: var(--bg-panel);
+        border-right: 1px solid var(--border-color);
         display: block;
-        flex-shrink: 0;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior-y: contain;
         touch-action: pan-y;
+    }
+    .chat-sidebar.sidebar-active {
+        transform: translateX(0);
     }
     .sidebar-section {
         padding: 8px 16px;
@@ -1316,8 +1339,9 @@ body {
         margin-bottom: 6px;
     }
     .chat-window {
-        flex: 1;
-        min-height: 0;
+        width: 100%;
+        height: 100%;
+        flex: none;
     }
     .chat-header {
         padding: 0 10px;

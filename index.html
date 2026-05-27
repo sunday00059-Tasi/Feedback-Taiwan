@@ -72,7 +72,10 @@
             <div class="header-logo">
                 <i class="fa-solid fa-helmet-safety header-icon"></i>
                 <div class="header-title">
-                    <h2>Feedback Translation Link</h2>
+                    <h2 style="display: flex; align-items: center; gap: 8px;">
+                        Feedback Translation Link
+                        <span class="version-badge" style="background: var(--accent-blue); color: #fff; font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; font-weight: 800; letter-spacing: 1px;">V4.0</span>
+                    </h2>
                     <span>製造業現場中日雙向即時翻譯大廳</span>
                 </div>
             </div>
@@ -100,8 +103,11 @@
 
         <!-- 聊天室主體 -->
         <div class="chat-body">
+            <!-- 側邊欄遮罩 (手機版專用) -->
+            <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
+
             <!-- 1. 左側邊欄：頻道與在線列表 -->
-            <aside class="chat-sidebar">
+            <aside class="chat-sidebar" id="chat-sidebar">
                 <!-- 頻道清單 -->
                 <div class="sidebar-section">
                     <h3><i class="fa-solid fa-hashtag"></i> 聊天頻道</h3>
@@ -145,9 +151,14 @@
             <main class="chat-window">
                 <!-- 聊天視窗頭部 -->
                 <div class="chat-window-header">
-                    <div class="channel-info">
-                        <h3 id="active-chat-title">📢 公開大廳</h3>
-                        <p id="active-chat-desc">本頻道的發言將會自動翻譯，所有人皆可看見。</p>
+                    <div class="channel-info" style="display: flex; align-items: center; gap: 12px;">
+                        <button id="mobile-menu-btn" class="btn btn-outline" style="display: none; padding: 6px 10px;" onclick="toggleMobileSidebar()">
+                            <i class="fa-solid fa-bars"></i>
+                        </button>
+                        <div>
+                            <h3 id="active-chat-title">📢 公開大廳</h3>
+                            <p id="active-chat-desc">本頻道的發言將會自動翻譯，所有人皆可看見。</p>
+                        </div>
                     </div>
                     
                     <!-- 管理員專屬面板 (僅管理員可見) -->
