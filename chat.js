@@ -448,8 +448,8 @@ async function translateWithGemini(text, from, to) {
         if (data.error) throw new Error(data.error.message);
         return data.candidates[0].content.parts[0].text.trim();
     } catch (e) {
-        console.error("Gemini Error:", e);
-        return "⚠️ Gemini 翻譯錯誤";
+        console.error("[Gemini API] Error:", e);
+        return `⚠️ Gemini 翻譯錯誤: ${e.message || "未知錯誤"}`;
     }
 }
 
