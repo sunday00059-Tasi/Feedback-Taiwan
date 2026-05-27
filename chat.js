@@ -1784,10 +1784,12 @@ function renderMessages() {
     }
 
     filtered.forEach(msg => {
+        const timeStr = new Date(msg.timestamp).toLocaleString([], { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+        
         if (msg.isSystem) {
             const div = document.createElement("div");
             div.className = "system-msg-notice";
-            div.innerHTML = `<i class="fa-solid fa-circle-info"></i> ${msg.text}`;
+            div.innerHTML = `<i class="fa-solid fa-circle-info"></i> [${timeStr}] ${msg.text}`;
             chatDom.messagesContainer.appendChild(div);
             return;
         }
@@ -2169,5 +2171,34 @@ window.applySystemMessageState = function() {
         icon.className = "fa-solid fa-eye-slash";
         text.textContent = "隱藏登入訊息";
         document.body.classList.remove("hide-system-messages");
+    }
+};
+
+window.clearAllSystemMessages = function() {
+    if (firebaseReady && db) {
+        const toDelete = appState.messages.filter(msg => msg.isSystem);
+        if (toDelete.length === 0) {
+            showToast("目前沒有任何登入紀錄", "info");
+            return;
+        }
+        const updates = {};
+        toDelete.forEach(msg => {
+            updates["messages/" + sanitizeFirebaseKey(msg.id)] = null;
+        });
+        db.ref().update(updates).then(() => {
+            showToast("已清除所有登入紀錄", "success");
+        }).catch(e => {
+            showToast("清除失敗: " + e.message, "error");
+        });
+    } else {
+        const hasSystemMsg = appState.messages.some(msg => msg.isSystem);
+        if (!hasSystemMsg) {
+            showToast("目前沒有任何登入紀錄", "info");
+            return;
+        }
+        appState.messages = appState.messages.filter(msg => !msg.isSystem);
+        localStorage.setItem("feedback_chat_messages", JSON.stringify(appState.messages));
+        renderMessages();
+        showToast("已清除所有登入紀錄", "success");
     }
 };
