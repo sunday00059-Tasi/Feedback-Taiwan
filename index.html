@@ -11,13 +11,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Outfit:wght@300;400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <!-- FontAwesome icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="chat.css">
+    <link rel="stylesheet" href="chat.css?v=4.4">
 </head>
 <body>
     <!-- 登入畫面 -->
     <div id="login-container" class="login-wrapper">
-        <!-- 語言切換器 -->
-        <div class="lang-switcher" style="position: absolute; top: 20px; right: 20px;">
+        <!-- 語言切換器與設定 -->
+        <div class="lang-switcher" style="position: absolute; top: 20px; right: 20px; display: flex; gap: 8px;">
+            <button id="btn-global-settings" class="btn btn-outline" style="padding: 4px 8px; border-radius: 6px; background: rgba(0,0,0,0.5); color: #fff; border: 1px solid var(--border-color);" onclick="openSettingsModal()" title="系統設定">
+                <i class="fa-solid fa-gear"></i>
+            </button>
             <select id="ui-lang-select" onchange="changeUILanguage(this.value)" style="background: rgba(0,0,0,0.5); color: #fff; border: 1px solid var(--border-color); padding: 4px 8px; border-radius: 6px; font-size: 0.85rem; outline: none; cursor: pointer;">
                 <option value="zh-TW">繁體中文</option>
                 <option value="ja-JP">日本語</option>
@@ -82,7 +85,7 @@
                 <div class="header-title">
                     <h2 style="display: flex; align-items: center; gap: 8px;">
                         Feedback Translation Link
-                        <span class="version-badge" style="background: var(--accent-blue); color: #fff; font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; font-weight: 800; letter-spacing: 1px;">V4.2</span>
+                        <span class="version-badge" style="background: var(--accent-blue); color: #fff; font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; font-weight: 800; letter-spacing: 1px;">V4.4</span>
                     </h2>
                     <span data-i18n="app_subtitle">製造業現場中日雙向即時翻譯大廳</span>
                 </div>
@@ -103,6 +106,9 @@
                     </div>
                 </div>
                 
+                <button id="btn-header-settings" class="btn btn-outline btn-xs" title="系統設定" onclick="openSettingsModal()">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
                 <button id="btn-logout" class="btn btn-outline btn-xs" title="登出">
                     <i class="fa-solid fa-power-off"></i>
                 </button>
@@ -246,6 +252,48 @@
                 <button class="btn btn-primary" onclick="saveQuickPhrases()" data-i18n="save_changes">儲存變更</button>
             </div>
         </div>
+
+
+    <!-- 系統設定對話框 (預設隱藏) -->
+    <div id="settings-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-gear" style="color: var(--accent-blue);"></i> <span data-i18n="settings_title">系統設定 (AI 翻譯引擎)</span></h3>
+                <button class="modal-close" onclick="closeSettingsModal()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="engine-select"><i class="fa-solid fa-robot"></i> <span data-i18n="label_translation_engine">選擇翻譯引擎</span></label>
+                    <select id="engine-select" class="form-control" onchange="toggleEngineSettings()">
+                        <option value="google">Google Translate (免費/內建)</option>
+                        <option value="gemini">Google Gemini (免費額度大/精準)</option>
+                        <option value="groq">Groq Llama 3 (極速/開源/免費)</option>
+                    </select>
+                </div>
+                
+                <div id="settings-gemini" class="engine-settings-block" style="display: none; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-top: 12px;">
+                    <div class="form-group">
+                        <label for="gemini-api-key">Gemini API Key</label>
+                        <input type="password" id="gemini-api-key" placeholder="AIzaSy..." class="form-control">
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">前往 <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--accent-blue);">Google AI Studio</a> 獲取免費金鑰。</p>
+                    </div>
+                </div>
+
+                <div id="settings-groq" class="engine-settings-block" style="display: none; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-top: 12px;">
+                    <div class="form-group">
+                        <label for="groq-api-key">Groq API Key</label>
+                        <input type="password" id="groq-api-key" placeholder="gsk_..." class="form-control">
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">前往 <a href="https://console.groq.com/keys" target="_blank" style="color: var(--accent-blue);">Groq Console</a> 獲取免費金鑰。</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeSettingsModal()" style="margin-right: 12px;" data-i18n="cancel">取消</button>
+                <button class="btn btn-primary" onclick="saveSettings()" data-i18n="save_changes">儲存變更</button>
+            </div>
+        </div>
     </div>
 
     <!-- 提示音效 (使用 Web Audio API 生成，不需外部檔案) -->
@@ -282,6 +330,6 @@
     <!-- Firebase SDK (跨瀏覽器即時同步) -->
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
-    <script src="chat.js"></script>
+    <script src="chat.js?v=4.4"></script>
 </body>
 </html>

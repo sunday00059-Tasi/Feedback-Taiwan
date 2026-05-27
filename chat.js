@@ -130,7 +130,9 @@ const I18N_DICT = {
         "confirm_logout": "確定要登出嗎？",
         "confirm_delete_msg": "確定要刪除這條訊息嗎？",
         "err_firebase_sdk_failed": "Firebase SDK 未載入，使用離線模式。",
-        "err_firebase_connect_failed": "Firebase 連接失敗，使用離線模式。"
+        "err_firebase_connect_failed": "Firebase 連接失敗，使用離線模式。",
+        "settings_title": "系統設定 (AI 翻譯引擎)",
+        "label_translation_engine": "選擇翻譯引擎"
     },
     "ja-JP": {
         "app_title": "Feedback Translation Link",
@@ -180,9 +182,9 @@ const I18N_DICT = {
         "toast_welcome_back": "お帰りなさい",
         "toast_phrase_updated": "フレーズを更新しました",
         "toast_phrase_failed": "フレーズの更新に失敗しました",
-        "toast_history_cleared": "会話履歴をクリアしました",
+        "toast_history_cleared": "チャット履歴をクリアしました",
         "private_chat_with": "{name} とのプライベートチャット",
-        "private_chat_desc": "これは双方向リアルタイム翻訳のプライベートチャンネルです。双方が会話を見ることができます。",
+        "private_chat_desc": "ここは双方向リアルタイム翻訳のプライベートチャンネルです。双方がメッセージを見ることができます。",
         "status_admin": "管理者",
         "status_operator": "オペレーター",
         "status_online": "オンライン",
@@ -202,7 +204,9 @@ const I18N_DICT = {
         "confirm_logout": "ログアウトしてもよろしいですか？",
         "confirm_delete_msg": "このメッセージを削除してもよろしいですか？",
         "err_firebase_sdk_failed": "Firebase SDK が読み込まれていません。オフラインモードを使用します。",
-        "err_firebase_connect_failed": "Firebase の接続に失敗しました。オフラインモードを使用します。"
+        "err_firebase_connect_failed": "Firebase の接続に失敗しました。オフラインモードを使用します。",
+        "settings_title": "システム設定 (AI翻訳エンジン)",
+        "label_translation_engine": "翻訳エンジンを選択"
     }
 };
 
@@ -216,6 +220,9 @@ let appState = {
     quickPhrases: [],
     apiKey: "",
     apiModel: "gemini-2.0-flash",
+    engine: localStorage.getItem("feedback_chat_engine") || "google",
+    geminiKey: localStorage.getItem("feedback_gemini_key") || "",
+    groqKey: localStorage.getItem("feedback_groq_key") || "",
     unreadCounts: {},
     lastRead: {},
     uiLanguage: localStorage.getItem("feedback_chat_ui_lang") || "zh-TW"
@@ -332,6 +339,138 @@ requestDesktopNotification();
 let firebaseReady = false;
 let db = null; // Firebase database reference
 let firebaseListenersAttached = false;
+
+// -----------------------------------------------------------
+//  系統設定 (AI 翻譯引擎)
+// -----------------------------------------------------------
+window.openSettingsModal = function() {
+    document.getElementById("settings-modal").style.display = "flex";
+    document.getElementById("engine-select").value = appState.engine;
+    document.getElementById("gemini-api-key").value = appState.geminiKey;
+    document.getElementById("groq-api-key").value = appState.groqKey;
+    window.toggleEngineSettings();
+};
+
+window.closeSettingsModal = function() {
+    document.getElementById("settings-modal").style.display = "none";
+};
+
+window.toggleEngineSettings = function() {
+    const engine = document.getElementById("engine-select").value;
+    const isAdmin = appState.currentUser && appState.currentUser.role === "管理員";
+    
+    // 只有管理員才看得到金鑰輸入框
+    if (isAdmin) {
+        document.getElementById("settings-gemini").style.display = (engine === "gemini") ? "block" : "none";
+        document.getElementById("settings-groq").style.display = (engine === "groq") ? "block" : "none";
+    } else {
+        document.getElementById("settings-gemini").style.display = "none";
+        document.getElementById("settings-groq").style.display = "none";
+    }
+};
+
+window.saveSettings = function() {
+    const isAdmin = appState.currentUser && appState.currentUser.role === "管理員";
+    const newEngine = document.getElementById("engine-select").value;
+    
+    let updates = { engine: newEngine };
+    
+    // 如果是管理員，連同 API 金鑰一起上傳更新
+    if (isAdmin) {
+        updates.geminiKey = document.getElementById("gemini-api-key").value.trim();
+        updates.groqKey = document.getElementById("groq-api-key").value.trim();
+    }
+    
+    // 同步到 Firebase (所有連線者會因為 setupFirebaseListeners 而自動切換)
+    if (firebaseReady && db) {
+        db.ref("settings").update(updates)
+            .then(() => {
+                showToast("設定已同步更新至雲端", "success");
+            })
+            .catch(err => {
+                showToast("設定更新失敗", "error");
+            });
+    } else {
+        showToast("尚未連接至雲端", "error");
+    }
+    
+    closeSettingsModal();
+};
+
+function updateApiBadge() {
+    if (!chatDom.chatApiBadge) return;
+    if (appState.engine === "gemini" && appState.geminiKey) {
+        chatDom.chatApiBadge.className = "api-badge green";
+        chatDom.chatApiBadge.innerHTML = `<i class="fa-solid fa-circle"></i> Gemini`;
+    } else if (appState.engine === "groq" && appState.groqKey) {
+        chatDom.chatApiBadge.className = "api-badge green";
+        chatDom.chatApiBadge.innerHTML = `<i class="fa-solid fa-circle"></i> Groq`;
+    } else {
+        chatDom.chatApiBadge.className = "api-badge red";
+        chatDom.chatApiBadge.innerHTML = `<i class="fa-solid fa-circle"></i> Google Free`;
+    }
+}
+
+// 初始化 API Badge
+document.addEventListener("DOMContentLoaded", () => {
+    // 延遲更新以確保 DOM 已載入
+    setTimeout(updateApiBadge, 500);
+});
+
+// -----------------------------------------------------------
+//  翻譯 API 實作
+// -----------------------------------------------------------
+
+async function translateWithGemini(text, from, to) {
+    if (!appState.geminiKey) return "API Key未設定";
+    const prompt = `Translate the following text from ${from} to ${to}. Only output the translated text, nothing else.\nText: ${text}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${appState.geminiKey}`;
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { temperature: 0.1 }
+            })
+        });
+        const data = await response.json();
+        if (data.error) throw new Error(data.error.message);
+        return data.candidates[0].content.parts[0].text.trim();
+    } catch (e) {
+        console.error("Gemini Error:", e);
+        return "⚠️ Gemini 翻譯錯誤";
+    }
+}
+
+async function translateWithGroq(text, from, to) {
+    if (!appState.groqKey) return "API Key未設定";
+    const url = "https://api.groq.com/openai/v1/chat/completions";
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${appState.groqKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: "llama3-70b-8192",
+                messages: [
+                    { role: "system", content: `You are a professional manufacturing translator. Translate exactly from ${from} to ${to} without any explanations, notes, or markdown formatting.` },
+                    { role: "user", content: text }
+                ],
+                temperature: 0.1,
+                max_tokens: 1024
+            })
+        });
+        const data = await response.json();
+        if (data.error) throw new Error(data.error.message);
+        return data.choices[0].message.content.trim();
+    } catch (e) {
+        console.error("Groq Error:", e);
+        return "⚠️ Groq 翻譯錯誤";
+    }
+}
 
 // -----------------------------------------------------------
 //  Firebase 初始化
@@ -486,6 +625,36 @@ function setupFirebaseListeners() {
         }
         if (typeof renderQuickPhrases === "function") {
             renderQuickPhrases();
+        }
+    });
+
+    // ── 監聽全域設定 (AI 引擎與金鑰) ──
+    db.ref("settings").on("value", (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            appState.engine = data.engine || "google";
+            appState.geminiKey = data.geminiKey || "";
+            appState.groqKey = data.groqKey || "";
+            
+            // 同步更新設定面板 UI (如果有打開的話)
+            const engineSelect = document.getElementById("engine-select");
+            if (engineSelect) {
+                engineSelect.value = appState.engine;
+                document.getElementById("gemini-api-key").value = appState.geminiKey;
+                document.getElementById("groq-api-key").value = appState.groqKey;
+                
+                // 只有打開面板的當下才需要切換 UI，但為了安全起見，如果不是管理員，不要填入金鑰
+                const isAdmin = appState.currentUser && appState.currentUser.role === "管理員";
+                if (!isAdmin) {
+                    document.getElementById("gemini-api-key").value = "";
+                    document.getElementById("groq-api-key").value = "";
+                }
+                
+                if (typeof window.toggleEngineSettings === "function") {
+                    window.toggleEngineSettings();
+                }
+            }
+            updateApiBadge();
         }
     });
 }
@@ -1489,8 +1658,14 @@ async function sendMessage() {
         if (LOCAL_TRANSLATION_DICT[text]) {
             translatedText = LOCAL_TRANSLATION_DICT[text];
         } else {
-            // 使用完全免費的 Google Translate 公開 API (免金鑰)
-            translatedText = await translateWithGoogleFreeAPI(text, sourceLang, targetLang);
+            if (appState.engine === "gemini" && appState.geminiKey) {
+                translatedText = await translateWithGemini(text, sourceLang, targetLang);
+            } else if (appState.engine === "groq" && appState.groqKey) {
+                translatedText = await translateWithGroq(text, sourceLang, targetLang);
+            } else {
+                // 使用完全免費的 Google Translate 公開 API (免金鑰)
+                translatedText = await translateWithGoogleFreeAPI(text, sourceLang, targetLang);
+            }
         }
 
         translatedText = applyFeedbackRule(translatedText);
