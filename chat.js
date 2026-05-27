@@ -454,7 +454,7 @@ async function translateWithGroq(text, from, to) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: "llama3-70b-8192",
+                model: "llama-3.3-70b-versatile",
                 messages: [
                     { role: "system", content: `You are a professional manufacturing translator. Translate exactly from ${from} to ${to} without any explanations, notes, or markdown formatting.` },
                     { role: "user", content: text }
