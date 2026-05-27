@@ -1244,18 +1244,31 @@ function renderRegisteredAccountsForAdmin() {
 
     appState.accounts.forEach(acc => {
         if (acc.id === "Feedback管理員") return;
+        
         const li = document.createElement("li");
         li.className = "user-item";
         li.style.justifyContent = "space-between";
+        
+        // 判斷是否可以刪除（不能刪除自己，也不能刪除其他管理員）
+        const isSelf = appState.currentUser && acc.id === appState.currentUser.id;
+        const isAdminAccount = acc.role === "管理員";
+        const canDelete = !isSelf && !isAdminAccount;
+        
+        const roleTrans = acc.role === "管理員" ? t("status_admin") : t("status_operator");
+        
+        let deleteBtnHTML = canDelete ? `
+            <button class="user-item-btn-delete" title="刪除此帳號" onclick="deleteAccountByAdmin('${acc.id}')">
+                <i class="fa-solid fa-trash-can"></i>
+            </button>
+        ` : ``;
+
         li.innerHTML = `
             <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
                 <span class="user-status-dot offline"></span>
                 <span class="user-item-name" title="${acc.name}">${acc.name}</span>
-                <span class="user-item-role">${acc.role}</span>
+                <span class="user-item-role ${isAdminAccount ? 'admin' : ''}">${roleTrans}</span>
             </div>
-            <button class="user-item-btn-delete" title="刪除此帳號" onclick="deleteAccountByAdmin('${acc.id}')">
-                <i class="fa-solid fa-trash-can"></i>
-            </button>
+            ${deleteBtnHTML}
         `;
         listEl.appendChild(li);
     });
