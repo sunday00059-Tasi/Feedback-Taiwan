@@ -1784,12 +1784,11 @@ function renderMessages() {
     }
 
     filtered.forEach(msg => {
-        const timeStr = new Date(msg.timestamp).toLocaleString([], { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-        
         if (msg.isSystem) {
+            const sysTimeStr = new Date(msg.timestamp).toLocaleString([], { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
             const div = document.createElement("div");
             div.className = "system-msg-notice";
-            div.innerHTML = `<i class="fa-solid fa-circle-info"></i> [${timeStr}] ${msg.text}`;
+            div.innerHTML = `<i class="fa-solid fa-circle-info"></i> [${sysTimeStr}] ${msg.text}`;
             chatDom.messagesContainer.appendChild(div);
             return;
         }
