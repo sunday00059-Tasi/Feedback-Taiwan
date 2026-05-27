@@ -57,8 +57,155 @@ const LOCAL_TRANSLATION_DICT = {
 };
 
 // -----------------------------------------------------------
-//  應用程式全域狀態
+//  多語系字典 (i18n)
 // -----------------------------------------------------------
+const I18N_DICT = {
+    "zh-TW": {
+        "app_title": "Feedback Translation Link",
+        "app_subtitle": "製造業現場中日雙向即時翻譯大廳",
+        "tab_login": "帳號登入",
+        "tab_register": "註冊新帳號",
+        "label_id": "身分 ID",
+        "placeholder_id": "請輸入已建立的 ID",
+        "label_pwd": "密碼",
+        "placeholder_pwd": "請輸入密碼 (一般用戶為 4 位數字)",
+        "btn_login": "登入系統",
+        "label_new_id": "新身分 ID",
+        "placeholder_new_id": "例如：Sato、王工程師",
+        "label_new_pwd": "請輸入 4 位數字密碼",
+        "placeholder_new_pwd": "例如：1234",
+        "btn_register": "建立帳號並登入",
+        "default_admin_text": "預設管理員 ID: ",
+        "api_unset": "API 未設定",
+        "not_logged_in": "未登入",
+        "operator": "操作員",
+        "btn_logout": "登出",
+        "channel_list": "聊天頻道",
+        "public_lobby": "📢 公開大廳",
+        "private_chat": "私人密聊",
+        "online_users": "目前在線成員",
+        "admin_accounts": "帳號管理 (管理員)",
+        "public_desc": "本頻道的發言將會自動翻譯，所有人皆可看見。",
+        "admin_functions": "管理功能：",
+        "clear_history": "清空此對話歷史",
+        "chat_start_notice": "對話開始，輸入的訊息將透過 Gemini 進行中日文即時雙向翻譯。",
+        "quick_phrases_label": "現場常用語：",
+        "btn_edit_phrases": "編輯常用語 (僅管理員)",
+        "detecting_lang": "自動語言偵測中...",
+        "input_placeholder": "輸入中文會自動翻成日文，輸入日文會翻成中文... 按 Enter 傳送",
+        "btn_send": "發送訊息",
+        "edit_phrases_title": "編輯現場常用語",
+        "edit_phrases_desc": "新增、修改或刪除下方列表中的現場常用語。變更將即時同步給所有連線中的使用者。",
+        "add_row": "新增一列",
+        "cancel": "取消",
+        "save_changes": "儲存變更",
+        "err_wrong_pwd": "密碼錯誤！",
+        "err_empty_login": "請輸入 ID 與密碼",
+        "err_pwd_4digits": "密碼必須為 4 位數字",
+        "err_id_taken": "該 ID 已被註冊，請換一個或直接登入。",
+        "err_api_missing": "請確認已設定好 API...",
+        "toast_login_success": "登入成功",
+        "toast_welcome_back": "歡迎回來",
+        "toast_phrase_updated": "常用語更新成功",
+        "toast_phrase_failed": "更新常用語失敗",
+        "toast_history_cleared": "對話紀錄已清空",
+        "private_chat_with": "與 {name} 的私訊",
+        "private_chat_desc": "此為雙向即時翻譯私密通道，僅你們雙方可看見對話。",
+        "status_admin": "管理員",
+        "status_operator": "操作員",
+        "status_online": "線上",
+        "status_offline": "離線",
+        "placeholder_edit_phrase": "請輸入常用語...",
+        "err_keep_one_phrase": "至少需要保留一組常用語。",
+        "confirm_delete_account": "確定要刪除帳號「{id}」嗎？",
+        "confirm_clear_chat": "確定要清空此頻道的對話紀錄嗎？此動作無法復原！",
+        "new_message_alert": "💬 您有新訊息！",
+        "err_no_account": "找不到此帳號，請確認 ID 是否輸入正確，或點擊「註冊新帳號」進行註冊。",
+        "err_id_empty": "請輸入身分 ID！",
+        "err_reserved_id": "不可註冊此保留 ID！",
+        "toast_register_success": "帳號註冊成功！已自動登入。",
+        "toast_account_deleted": "帳號「{id}」已被管理員註銷。",
+        "err_translate_failed": "翻譯失敗：無法連接至翻譯伺服器",
+        "err_copy_failed": "複製失敗",
+        "confirm_logout": "確定要登出嗎？",
+        "confirm_delete_msg": "確定要刪除這條訊息嗎？",
+        "err_firebase_sdk_failed": "Firebase SDK 未載入，使用離線模式。",
+        "err_firebase_connect_failed": "Firebase 連接失敗，使用離線模式。"
+    },
+    "ja-JP": {
+        "app_title": "Feedback Translation Link",
+        "app_subtitle": "製造現場中日双方向リアルタイム翻訳ロビー",
+        "tab_login": "ログイン",
+        "tab_register": "新規登録",
+        "label_id": "ユーザー ID",
+        "placeholder_id": "作成済みのIDを入力",
+        "label_pwd": "パスワード",
+        "placeholder_pwd": "パスワードを入力 (一般ユーザーは4桁)",
+        "btn_login": "ログイン",
+        "label_new_id": "新規ユーザー ID",
+        "placeholder_new_id": "例：Sato、王エンジニア",
+        "label_new_pwd": "4桁の数字パスワードを入力",
+        "placeholder_new_pwd": "例：1234",
+        "btn_register": "アカウントを作成してログイン",
+        "default_admin_text": "デフォルト管理者ID: ",
+        "api_unset": "API 未設定",
+        "not_logged_in": "未ログイン",
+        "operator": "オペレーター",
+        "btn_logout": "ログアウト",
+        "channel_list": "チャンネル",
+        "public_lobby": "📢 公開ロビー",
+        "private_chat": "プライベートチャット",
+        "online_users": "オンラインメンバー",
+        "admin_accounts": "アカウント管理 (管理者)",
+        "public_desc": "このチャンネルのメッセージは自動翻訳され、全員が閲覧できます。",
+        "admin_functions": "管理機能：",
+        "clear_history": "この会話履歴をクリア",
+        "chat_start_notice": "会話開始。入力されたメッセージは中日リアルタイム双方向翻訳されます。",
+        "quick_phrases_label": "現場よく使うフレーズ：",
+        "btn_edit_phrases": "フレーズを編集 (管理者のみ)",
+        "detecting_lang": "自動言語検出中...",
+        "input_placeholder": "中国語を入力すると日本語に、日本語を入力すると中国語に自動翻訳されます... Enterで送信",
+        "btn_send": "送信",
+        "edit_phrases_title": "現場フレーズを編集",
+        "edit_phrases_desc": "以下のリストのフレーズを追加、変更、または削除します。変更はすべてのユーザーに同期されます。",
+        "add_row": "行を追加",
+        "cancel": "キャンセル",
+        "save_changes": "変更を保存",
+        "err_wrong_pwd": "パスワードが間違っています！",
+        "err_empty_login": "IDとパスワードを入力してください",
+        "err_pwd_4digits": "パスワードは4桁の数字である必要があります",
+        "err_id_taken": "このIDは既に登録されています。",
+        "err_api_missing": "API設定を確認してください...",
+        "toast_login_success": "ログイン成功",
+        "toast_welcome_back": "お帰りなさい",
+        "toast_phrase_updated": "フレーズを更新しました",
+        "toast_phrase_failed": "フレーズの更新に失敗しました",
+        "toast_history_cleared": "会話履歴をクリアしました",
+        "private_chat_with": "{name} とのプライベートチャット",
+        "private_chat_desc": "これは双方向リアルタイム翻訳のプライベートチャンネルです。双方が会話を見ることができます。",
+        "status_admin": "管理者",
+        "status_operator": "オペレーター",
+        "status_online": "オンライン",
+        "status_offline": "オフライン",
+        "placeholder_edit_phrase": "フレーズを入力してください...",
+        "err_keep_one_phrase": "最低1つのフレーズを残す必要があります。",
+        "confirm_delete_account": "アカウント「{id}」を削除してもよろしいですか？",
+        "confirm_clear_chat": "このチャンネルの会話履歴をクリアしてもよろしいですか？この操作は元に戻せません！",
+        "new_message_alert": "💬 新しいメッセージがあります！",
+        "err_no_account": "アカウントが見つかりません。IDが正しいか確認するか、「新規アカウント登録」をクリックしてください。",
+        "err_id_empty": "ユーザーIDを入力してください！",
+        "err_reserved_id": "この予約IDは登録できません！",
+        "toast_register_success": "アカウント登録成功！自動ログインしました。",
+        "toast_account_deleted": "アカウント「{id}」は管理者により削除されました。",
+        "err_translate_failed": "翻訳失敗：翻訳サーバーに接続できません",
+        "err_copy_failed": "コピー失敗",
+        "confirm_logout": "ログアウトしてもよろしいですか？",
+        "confirm_delete_msg": "このメッセージを削除してもよろしいですか？",
+        "err_firebase_sdk_failed": "Firebase SDK が読み込まれていません。オフラインモードを使用します。",
+        "err_firebase_connect_failed": "Firebase の接続に失敗しました。オフラインモードを使用します。"
+    }
+};
+
 let appState = {
     currentUser: null,
     activeUserSim: null,
@@ -70,20 +217,92 @@ let appState = {
     apiKey: "",
     apiModel: "gemini-2.0-flash",
     unreadCounts: {},
-    lastRead: {}
+    lastRead: {},
+    uiLanguage: localStorage.getItem("feedback_chat_ui_lang") || "zh-TW"
 };
 
+function t(key, params = {}) {
+    let text = I18N_DICT[appState.uiLanguage][key] || I18N_DICT["zh-TW"][key] || key;
+    for (const [k, v] of Object.entries(params)) {
+        text = text.replace(`{${k}}`, v);
+    }
+    return text;
+}
+
+window.changeUILanguage = function(lang) {
+    if (I18N_DICT[lang]) {
+        appState.uiLanguage = lang;
+        localStorage.setItem("feedback_chat_ui_lang", lang);
+        updateUIDOM();
+    }
+};
+
+function updateUIDOM() {
+    // 1. 更新帶有 data-i18n 的文字
+    document.querySelectorAll("[data-i18n]").forEach(el => {
+        const key = el.getAttribute("data-i18n");
+        // 保留原有的圖示 (如果有)
+        const icon = el.querySelector("i");
+        if (icon) {
+            el.innerHTML = "";
+            el.appendChild(icon);
+            el.appendChild(document.createTextNode(" " + t(key)));
+        } else {
+            el.textContent = t(key);
+        }
+    });
+    
+    // 2. 更新帶有 data-i18n-placeholder 的文字
+    document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+        const key = el.getAttribute("data-i18n-placeholder");
+        el.placeholder = t(key);
+    });
+
+    // 3. 強制刷新依賴動態語言的介面 (頻道標題、在線列表等)
+    if (appState.currentUser) {
+        switchChannel(appState.activeChannel);
+        renderRegisteredAccountsForAdmin();
+        renderOnlineUsers();
+        if (typeof renderQuickPhrases === "function") {
+            renderQuickPhrases();
+        }
+        
+        // 更新使用者身分文字
+        const roleSpan = document.getElementById("current-user-role");
+        if (roleSpan && appState.currentUser) {
+            roleSpan.textContent = appState.currentUser.role === "管理員" ? t("status_admin") : t("status_operator");
+        }
+    }
+}
+
+
 // -----------------------------------------------------------
-//  視窗標題閃爍提醒 (背景通知)
+//  視窗標題閃爍提醒與桌面通知 (背景通知)
 // -----------------------------------------------------------
 let originalTitle = document.title || "即時通訊與翻譯";
 let titleFlashInterval = null;
+
+function requestDesktopNotification() {
+    if ("Notification" in window) {
+        if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+            Notification.requestPermission();
+        }
+    }
+}
+
+function showDesktopNotification() {
+    if ("Notification" in window && Notification.permission === "granted") {
+        new Notification(t("new_message_alert"), {
+            body: t("app_subtitle")
+        });
+    }
+}
 
 function startTitleFlash() {
     if (titleFlashInterval) return;
     let showNew = true;
     titleFlashInterval = setInterval(() => {
-        document.title = showNew ? "💬 您有新訊息！" : originalTitle;
+        document.title = showNew ? t("new_message_alert") : originalTitle;
         showNew = !showNew;
     }, 1000);
 }
@@ -104,8 +323,11 @@ function playNotificationSound() {
     try { sound.playNotification(); } catch (e) {}
     if (!document.hasFocus()) {
         startTitleFlash();
+        showDesktopNotification();
     }
 }
+
+requestDesktopNotification();
 
 let firebaseReady = false;
 let db = null; // Firebase database reference
@@ -128,7 +350,7 @@ function initFirebase() {
         // 檢查 firebase 是否已載入
         if (typeof firebase === "undefined") {
             console.error("[Firebase] SDK 未載入！請確認 chat.html 中的 Firebase script 標籤。");
-            showToast("Firebase SDK 未載入，使用離線模式。", "error");
+            showToast(t("err_firebase_sdk_failed"), "error");
             firebaseReady = false;
             return false;
         }
@@ -142,7 +364,7 @@ function initFirebase() {
         return true;
     } catch (err) {
         console.error("[Firebase] 初始化失敗:", err);
-        showToast("Firebase 連接失敗，使用離線模式。", "error");
+        showToast(t("err_firebase_connect_failed"), "error");
         firebaseReady = false;
         return false;
     }
@@ -528,6 +750,12 @@ function updateApiBadgeUI() {
 // -----------------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
     loadSettings();
+    updateUIDOM();
+    
+    const langSelect = document.getElementById("ui-lang-select");
+    if (langSelect) {
+        langSelect.value = appState.uiLanguage;
+    }
 
     // 初始化 Firebase
     const fbOk = initFirebase();
@@ -858,18 +1086,18 @@ function handleLogin() {
     const loginPwd = chatDom.loginPassword.value.trim();
 
     if (!loginId) {
-        showToast("請輸入身分 ID！", "warning");
+        showToast(t("err_id_empty"), "warning");
         return;
     }
 
     const acc = appState.accounts.find(x => x.id === loginId);
     if (!acc) {
-        showToast("找不到此帳號，請確認 ID 是否輸入正確，或點擊「註冊新帳號」進行註冊。", "error");
+        showToast(t("err_no_account"), "error");
         return;
     }
 
     if (acc.password !== loginPwd) {
-        showToast("密碼不正確，請重新輸入！", "error");
+        showToast(t("err_wrong_pwd"), "error");
         return;
     }
 
@@ -881,23 +1109,23 @@ function handleRegister() {
     const regPwd = document.getElementById("register-password").value.trim();
 
     if (!regId) {
-        showToast("請輸入身分 ID！", "warning");
+        showToast(t("err_id_empty"), "warning");
         return;
     }
 
     if (regId.toLowerCase() === "feedback管理員" || regId.toLowerCase() === "feedback") {
-        showToast("不可註冊此保留 ID！", "error");
+        showToast(t("err_reserved_id"), "error");
         return;
     }
 
     if (!/^\d{4}$/.test(regPwd)) {
-        showToast("密碼必須為 4 位數字！", "warning");
+        showToast(t("err_pwd_4digits"), "warning");
         return;
     }
 
     const isExist = appState.accounts.some(acc => acc.id.toLowerCase() === regId.toLowerCase());
     if (isExist) {
-        showToast("此 ID 已被註冊！請使用「帳號登入」分頁進入。", "warning");
+        showToast(t("err_id_taken"), "warning");
         return;
     }
 
@@ -916,7 +1144,7 @@ function handleRegister() {
     }
 
     loginAsUser(newAcc);
-    showToast("帳號註冊成功！已自動登入。", "success");
+    showToast(t("toast_register_success"), "success");
 }
 
 function loginAsUser(acc) {
@@ -966,7 +1194,7 @@ function enterApp() {
 }
 
 function handleLogout() {
-    if (confirm("確定要登出嗎？")) {
+    if (confirm(t("confirm_logout"))) {
         if (appState.currentUser && !appState.currentUser.isSimulated) {
             goOffline(appState.currentUser.id);
         }
@@ -1034,8 +1262,7 @@ function renderRegisteredAccountsForAdmin() {
 }
 
 window.deleteAccountByAdmin = function(userId) {
-    if (userId === "Feedback管理員") return;
-    if (!confirm(`確定要刪除帳號「${userId}」嗎？`)) return;
+    if (!confirm(t("confirm_delete_account", {id: userId}))) return;
 
     deleteAccountFromStore(userId);
     goOffline(userId);
@@ -1060,7 +1287,7 @@ window.deleteAccountByAdmin = function(userId) {
     renderPrivateChannels();
     renderRegisteredAccountsForAdmin();
     renderMessages();
-    showToast(`帳號「${userId}」已被管理員註銷。`, "success");
+    showToast(t("toast_account_deleted", {id: userId}), "success");
 };
 
 window.switchLoginTab = function(tab) {
@@ -1105,13 +1332,13 @@ function switchChannel(channelId) {
     });
 
     if (channelId === "public") {
-        chatDom.activeChatTitle.innerHTML = `📢 公開大廳`;
-        chatDom.activeChatDesc.textContent = "本頻道的發言將會自動翻譯，所有人皆可看見。";
+        chatDom.activeChatTitle.innerHTML = t("public_lobby");
+        chatDom.activeChatDesc.textContent = t("public_desc");
     } else {
         const targetUserId = channelId.replace("private_", "");
         const user = appState.users.find(u => u.id === targetUserId);
-        chatDom.activeChatTitle.innerHTML = `<i class="fa-solid fa-user-shield"></i> 與 ${user ? user.name : targetUserId} 的私訊`;
-        chatDom.activeChatDesc.textContent = "此為雙向即時翻譯私密通道，僅你們雙方可看見對話。";
+        chatDom.activeChatTitle.innerHTML = `<i class="fa-solid fa-user-shield"></i> ` + t("private_chat_with", {name: user ? user.name : targetUserId});
+        chatDom.activeChatDesc.textContent = t("private_chat_desc");
     }
 
     renderMessages();
@@ -1133,10 +1360,11 @@ function renderOnlineUsers() {
         li.className = "user-item";
         li.setAttribute("data-priv-id", user.id);
         const isAdmin = user.role === "管理員";
+        const roleTrans = user.role === "管理員" ? t("status_admin") : t("status_operator");
         li.innerHTML = `
             <span class="user-status-dot"></span>
             <span class="user-item-name">${user.name}</span>
-            <span class="user-item-role ${isAdmin ? 'admin' : ''}">${user.role}</span>
+            <span class="user-item-role ${isAdmin ? 'admin' : ''}">${roleTrans}</span>
         `;
         li.addEventListener("click", () => switchChannel(`private_${user.id}`));
         chatDom.onlineUsersList.appendChild(li);
@@ -1279,7 +1507,7 @@ async function sendMessage() {
                 renderMessages();
             }
         }
-        showToast(`翻譯失敗：無法連接至翻譯伺服器`, "error", 4000);
+        showToast(t("err_translate_failed"), "error", 4000);
     }
 }
 
@@ -1453,14 +1681,14 @@ window.copyTranslatedText = function(btnElement) {
         const origText = btnElement.innerHTML;
         btnElement.innerHTML = `<i class="fa-solid fa-circle-check" style="color: var(--accent-green)"></i> 已複製`;
         setTimeout(() => { btnElement.innerHTML = origText; }, 1500);
-    }).catch(() => showToast("複製失敗", "error"));
+    }).catch(() => showToast(t("err_copy_failed"), "error"));
 };
 
 // -----------------------------------------------------------
 //  管理員刪除訊息
 // -----------------------------------------------------------
 window.deleteSingleMessage = function(msgId) {
-    if (!confirm("確定要刪除這條訊息嗎？")) return;
+    if (!confirm(t("confirm_delete_msg"))) return;
     deleteMessageFromStore(msgId);
     appState.messages = appState.messages.filter(m => m.id !== msgId);
     renderMessages();
@@ -1471,7 +1699,7 @@ window.deleteSingleMessage = function(msgId) {
 //  管理員清空頻道歷史
 // -----------------------------------------------------------
 function handleClearChannelHistory() {
-    if (!confirm(`確定要清空當前頻道「${chatDom.activeChatTitle.textContent}」的所有對話紀錄嗎？`)) return;
+    if (!confirm(t("confirm_clear_chat"))) return;
 
     if (appState.activeChannel === "public") {
         clearChannelMessagesFromStore("public", null);
@@ -1704,19 +1932,19 @@ window.saveQuickPhrases = function() {
     });
     
     if (newPhrases.length === 0) {
-        alert("至少需要保留一組常用語。");
+        alert(t("err_keep_one_phrase"));
         return;
     }
     
     if (db) {
         db.ref("quick_phrases").set(newPhrases)
             .then(() => {
-                showToast("常用語更新成功", "success");
+                showToast(t("toast_phrase_updated"), "success");
                 closeEditQuickPhrasesModal();
             })
             .catch(err => {
                 console.error("更新常用語失敗", err);
-                showToast("更新常用語失敗", "error");
+                showToast(t("toast_phrase_failed"), "error");
             });
     }
 };
