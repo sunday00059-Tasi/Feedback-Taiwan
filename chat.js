@@ -908,7 +908,6 @@ const chatDom = {
 // -----------------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
     updateUIDOM();
-    checkLoginSession();
     
     const langSelect = document.getElementById("ui-lang-select");
     if (langSelect) {
