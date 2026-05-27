@@ -1339,7 +1339,7 @@ function enterApp() {
     chatDom.currentUserRole.textContent = appState.currentUser.role;
 
     fillSimulatorSelect();
-    loadSettings();
+    updateApiBadge();
     updateAdminPanelUI();
     renderOnlineUsers();
     renderPrivateChannels();
