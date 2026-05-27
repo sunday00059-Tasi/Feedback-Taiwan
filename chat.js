@@ -399,15 +399,25 @@ window.saveSettings = function() {
 
 function updateApiBadge() {
     if (!chatDom.chatApiBadge) return;
-    if (appState.engine === "gemini" && appState.geminiKey) {
-        chatDom.chatApiBadge.className = "api-badge green";
-        chatDom.chatApiBadge.innerHTML = `<i class="fa-solid fa-circle"></i> Gemini`;
-    } else if (appState.engine === "groq" && appState.groqKey) {
-        chatDom.chatApiBadge.className = "api-badge green";
-        chatDom.chatApiBadge.innerHTML = `<i class="fa-solid fa-circle"></i> Groq`;
+    if (appState.engine === "gemini") {
+        if (appState.geminiKey) {
+            chatDom.chatApiBadge.className = "api-badge green";
+            chatDom.chatApiBadge.innerHTML = `<i class="fa-solid fa-circle"></i> Gemini`;
+        } else {
+            chatDom.chatApiBadge.className = "api-badge red";
+            chatDom.chatApiBadge.innerHTML = `<i class="fa-solid fa-circle"></i> Gemini (未設定金鑰)`;
+        }
+    } else if (appState.engine === "groq") {
+        if (appState.groqKey) {
+            chatDom.chatApiBadge.className = "api-badge green";
+            chatDom.chatApiBadge.innerHTML = `<i class="fa-solid fa-circle"></i> Groq`;
+        } else {
+            chatDom.chatApiBadge.className = "api-badge red";
+            chatDom.chatApiBadge.innerHTML = `<i class="fa-solid fa-circle"></i> Groq (未設定金鑰)`;
+        }
     } else {
-        chatDom.chatApiBadge.className = "api-badge red";
-        chatDom.chatApiBadge.innerHTML = `<i class="fa-solid fa-circle"></i> Google Free`;
+        chatDom.chatApiBadge.className = "api-badge green";
+        chatDom.chatApiBadge.innerHTML = `<i class="fa-solid fa-circle"></i> Google Translate`;
     }
 }
 
@@ -424,7 +434,7 @@ document.addEventListener("DOMContentLoaded", () => {
 async function translateWithGemini(text, from, to) {
     if (!appState.geminiKey) return "API Key未設定";
     const prompt = `Translate the following text from ${from} to ${to}. Only output the translated text, nothing else.\nText: ${text}`;
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${appState.geminiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${appState.geminiKey}`;
     try {
         const response = await fetch(url, {
             method: 'POST',
@@ -889,37 +899,16 @@ const chatDom = {
 // -----------------------------------------------------------
 //  設定讀取 (API Key / Model — 始終存在 LocalStorage)
 // -----------------------------------------------------------
-function loadSettings() {
-    const currentKey = localStorage.getItem(API_KEY_STORAGE_KEY);
-    if (!currentKey || currentKey.trim() === "" || currentKey === "null") {
-        localStorage.setItem(API_KEY_STORAGE_KEY, "AIzaSyAqEipbBGfGClYMqLUutVVJnA5PBpM2RHU");
-    }
-    // ★ 預設模型改為 gemini-2.0-flash（gemini-1.5-flash 已在部分地區不可用）
-    const currentModel = localStorage.getItem(API_MODEL_STORAGE_KEY);
-    if (!currentModel || currentModel.trim() === "" || currentModel === "null" || currentModel === "gemini-1.5-flash") {
-        localStorage.setItem(API_MODEL_STORAGE_KEY, "gemini-2.0-flash");
-    }
-    appState.apiKey = localStorage.getItem(API_KEY_STORAGE_KEY) || "";
-    appState.apiModel = localStorage.getItem(API_MODEL_STORAGE_KEY) || "gemini-2.0-flash";
-    updateApiBadgeUI();
-}
-
-function updateApiBadgeUI() {
-    if (appState.apiKey) {
-        chatDom.chatApiBadge.className = "api-badge green";
-        chatDom.chatApiBadge.innerHTML = `<i class="fa-solid fa-circle"></i> Gemini 翻譯已啟用`;
-    } else {
-        chatDom.chatApiBadge.className = "api-badge red";
-        chatDom.chatApiBadge.innerHTML = `<i class="fa-solid fa-circle"></i> 未設定 API (模擬翻譯模式)`;
-    }
-}
+// -----------------------------------------------------------
+//  (已被移除: loadSettings 與 updateApiBadgeUI)
+// -----------------------------------------------------------
 
 // -----------------------------------------------------------
 //  初始化入口
 // -----------------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
-    loadSettings();
     updateUIDOM();
+    checkLoginSession();
     
     const langSelect = document.getElementById("ui-lang-select");
     if (langSelect) {
