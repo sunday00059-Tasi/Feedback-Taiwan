@@ -434,7 +434,7 @@ document.addEventListener("DOMContentLoaded", () => {
 async function translateWithGemini(text, from, to) {
     if (!appState.geminiKey) return "API Key未設定";
     const prompt = `Translate the following text from ${from} to ${to}. Only output the translated text, nothing else.\nText: ${text}`;
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${appState.geminiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${appState.geminiKey}`;
     try {
         const response = await fetch(url, {
             method: 'POST',
