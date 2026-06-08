@@ -1808,7 +1808,7 @@ function renderMessages() {
         row.id = msg.id;
         row.className = `message-row ${isSelf ? 'self' : 'other'}`;
 
-        const timeStr = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const timeStr = new Date(msg.timestamp).toLocaleString([], { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
         const isJa = detectJapanese(msg.text);
 
         // 管理員刪除按鈕
