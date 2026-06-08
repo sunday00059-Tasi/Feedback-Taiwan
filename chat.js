@@ -1906,7 +1906,7 @@ function renderMessages() {
 
         row.innerHTML = `
             <div class="message-meta">
-                ${!isSelf ? `<span class="message-sender">${msg.senderName}</span>` : ''}
+                ${!isSelf ? `<span class="message-sender" title="點擊發送私訊" onclick="switchChannel('private_${msg.senderId}')">${msg.senderName}</span>` : ''}
                 <span class="message-tag">${msg.senderRole}</span>
                 <span class="message-time">${timeStr}</span>
                 ${recallBtnHtml}

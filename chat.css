@@ -234,6 +234,18 @@ body {
     gap: 8px;
 }
 
+.message-sender {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.message-sender:hover {
+    color: var(--accent-blue);
+    text-decoration: underline;
+}
+
 .form-group label {
     font-size: 0.82rem;
     font-weight: 600;
