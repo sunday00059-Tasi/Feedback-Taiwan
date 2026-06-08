@@ -227,7 +227,8 @@ let appState = {
     lastRead: {},
     uiLanguage: localStorage.getItem("feedback_chat_ui_lang") || "zh-TW",
     hideSystemMessages: localStorage.getItem("hide_system_messages") === "1",
-    replyingTo: null
+    replyingTo: null,
+    pendingImage: null
 };
 
 function t(key, params = {}) {
@@ -1157,13 +1158,31 @@ function detectJapanese(text) {
 // -----------------------------------------------------------
 function pruneOldMessages() {
     const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
-    const initialCount = appState.messages.length;
-    const toDelete = appState.messages.filter(msg => new Date(msg.timestamp).getTime() < sevenDaysAgo);
 
-    if (toDelete.length > 0) {
+    // 1. 釋放超過 7 天的照片容量，保留文字訊息
+    const expiredImageMsgs = appState.messages.filter(msg => msg.imageUrl && new Date(msg.timestamp).getTime() < sevenDaysAgo);
+    if (expiredImageMsgs.length > 0) {
+        if (firebaseReady && db) {
+            const updates = {};
+            expiredImageMsgs.forEach(msg => {
+                updates["messages/" + sanitizeFirebaseKey(msg.id) + "/imageUrl"] = null;
+                msg.imageUrl = null; // 更新本地端
+            });
+            db.ref().update(updates);
+        } else {
+            expiredImageMsgs.forEach(msg => {
+                msg.imageUrl = null;
+            });
+            localStorage.setItem("feedback_chat_messages", JSON.stringify(appState.messages));
+        }
+        console.log(`已自動清除 ${expiredImageMsgs.length} 張超過 7 天的照片釋放空間。`);
+    }
+
+    // 2. 限制最高筆數 (例如 1000 筆)，避免載入過度緩慢
+    if (appState.messages.length > 1000) {
+        const toDelete = appState.messages.slice(0, appState.messages.length - 1000);
         toDelete.forEach(msg => deleteMessageFromStore(msg.id));
-        appState.messages = appState.messages.filter(msg => new Date(msg.timestamp).getTime() >= sevenDaysAgo);
-        console.log(`已清理 ${toDelete.length} 條超過 7 天的歷史對話。`);
+        appState.messages = appState.messages.slice(appState.messages.length - 1000);
     }
 }
 
@@ -1608,7 +1627,7 @@ function sendSystemNotice(text) {
 // -----------------------------------------------------------
 async function sendMessage() {
     const text = chatDom.chatMessageInput.value.trim();
-    if (!text) return;
+    if (!text && !appState.pendingImage) return;
 
     chatDom.chatMessageInput.value = "";
     chatDom.chatMessageInput.dispatchEvent(new Event("input"));
@@ -1637,6 +1656,11 @@ async function sendMessage() {
             senderName: appState.replyingTo.senderName
         };
         cancelReply();
+    }
+
+    if (appState.pendingImage) {
+        newMsg.imageUrl = appState.pendingImage;
+        cancelImage();
     }
 
     // 先儲存初始狀態
@@ -1839,6 +1863,30 @@ function renderMessages() {
             </div>`;
         }
 
+        // 照片渲染與 7 天過期判定
+        let imageHtml = "";
+        if (msg.imageUrl) {
+            const isExpired = (Date.now() - new Date(msg.timestamp).getTime()) > 7 * 24 * 60 * 60 * 1000;
+            if (isExpired) {
+                imageHtml = `<div class="expired-image"><i class="fa-solid fa-image-slash"></i> 已超過 7 天下載期限無法讀取</div>`;
+            } else {
+                imageHtml = `<img src="${msg.imageUrl}" class="chat-image" onclick="openImageModal(this.src)" title="點擊放大">`;
+            }
+        }
+
+        // 文字區域 (如果沒有文字就不顯示)
+        let textOriginalHtml = msg.text ? `
+            <div class="text-original">
+                <span class="lang-flag">${isJa ? '日' : '中'}</span>
+                <span class="msg-text">${msg.text}</span>
+            </div>` : '';
+            
+        let textTranslatedHtml = msg.text ? `
+            <div class="text-translated ${translationClass}">
+                <span class="lang-flag">${isJa ? '中' : '日'}</span>
+                <span class="msg-text">${translationContent}</span>
+            </div>` : '';
+
         row.innerHTML = `
             <div class="message-meta">
                 ${!isSelf ? `<span class="message-sender">${msg.senderName}</span>` : ''}
@@ -1848,14 +1896,9 @@ function renderMessages() {
             </div>
             <div class="message-bubble">
                 ${replyQuoteHtml}
-                <div class="text-original">
-                    <span class="lang-flag">${isJa ? '日' : '中'}</span>
-                    <span class="msg-text">${msg.text}</span>
-                </div>
-                <div class="text-translated ${translationClass}">
-                    <span class="lang-flag">${isJa ? '中' : '日'}</span>
-                    <span class="msg-text">${translationContent}</span>
-                </div>
+                ${imageHtml}
+                ${textOriginalHtml}
+                ${textTranslatedHtml}
             </div>
             <div class="message-actions">
                 <button class="btn-msg-action" title="複製譯文" onclick="copyTranslatedText(this)">
@@ -2262,5 +2305,78 @@ window.scrollToMessage = function(msgId) {
         }, 2000);
     } else {
         showToast("找不到該則原始訊息 (可能已被刪除或捲動過多)", "warning");
+    }
+};
+
+// -----------------------------------------------------------
+//  照片上傳與處理功能
+// -----------------------------------------------------------
+window.handleImageSelection = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        compressImage(e.target.result, 800, 0.6, function(compressedBase64) {
+            appState.pendingImage = compressedBase64;
+            
+            // 顯示預覽區
+            const previewBar = document.getElementById("image-preview-bar");
+            const previewThumb = document.getElementById("image-preview-thumb");
+            if (previewBar && previewThumb) {
+                previewThumb.src = compressedBase64;
+                previewBar.style.display = "flex";
+            }
+            chatDom.chatMessageInput.focus();
+        });
+    };
+    reader.readAsDataURL(file);
+    // 重置 input 以便下次能選同一張
+    event.target.value = "";
+};
+
+window.compressImage = function(base64Str, maxWidth, quality, callback) {
+    const img = new Image();
+    img.src = base64Str;
+    img.onload = function() {
+        const canvas = document.createElement("canvas");
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        callback(canvas.toDataURL("image/jpeg", quality));
+    };
+};
+
+window.cancelImage = function() {
+    appState.pendingImage = null;
+    const previewBar = document.getElementById("image-preview-bar");
+    if (previewBar) {
+        previewBar.style.display = "none";
+    }
+};
+
+window.openImageModal = function(src) {
+    const modal = document.getElementById("image-modal");
+    const modalImg = document.getElementById("image-modal-content");
+    if (modal && modalImg) {
+        modalImg.src = src;
+        modal.style.display = "flex";
+    }
+};
+
+window.closeImageModal = function() {
+    const modal = document.getElementById("image-modal");
+    if (modal) {
+        modal.style.display = "none";
     }
 };

@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Outfit:wght@300;400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <!-- FontAwesome icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="chat.css?v=5.7">
+    <link rel="stylesheet" href="chat.css?v=5.8">
 </head>
 <body>
     <!-- 登入畫面 -->
@@ -85,7 +85,7 @@
                 <div class="header-title">
                     <h2 style="display: flex; align-items: center; gap: 8px;">
                         Feedback Translation Link
-                        <span class="version-badge" style="background: var(--accent-blue); color: #fff; font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; font-weight: 800; letter-spacing: 1px;">V5.7</span>
+                        <span class="version-badge" style="background: var(--accent-blue); color: #fff; font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; font-weight: 800; letter-spacing: 1px;">V5.8</span>
                     </h2>
                     <span data-i18n="app_subtitle">製造業現場中日雙向即時翻譯大廳</span>
                 </div>
@@ -226,6 +226,18 @@
                         </div>
                     </div>
 
+                    <!-- 照片發送預覽區 -->
+                    <div id="image-preview-bar" class="reply-preview-bar" style="display: none; border-left-color: var(--accent-green);">
+                        <div class="reply-preview-content">
+                            <i class="fa-solid fa-image"></i>
+                            <img id="image-preview-thumb" src="" style="height: 30px; border-radius: 4px; margin: 0 8px;">
+                            <span id="image-preview-text">已選擇 1 張照片...</span>
+                        </div>
+                        <button class="btn-cancel-reply" onclick="cancelImage()">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+
                     <!-- 訊息回覆預覽區 -->
                     <div id="reply-preview-bar" class="reply-preview-bar" style="display: none;">
                         <div class="reply-preview-content">
@@ -238,7 +250,11 @@
                     </div>
 
                     <!-- 訊息輸入表單 -->
+                    <input type="file" id="image-upload-input" accept="image/*" style="display: none;" onchange="handleImageSelection(event)">
                     <div class="input-form">
+                        <button id="btn-upload-image" class="btn btn-outline" style="border: none; padding: 0 12px; font-size: 1.2rem; color: var(--text-muted);" onclick="document.getElementById('image-upload-input').click()" title="發送照片">
+                            <i class="fa-solid fa-camera"></i>
+                        </button>
                         <textarea id="chat-message-input" rows="2" data-i18n-placeholder="input_placeholder" placeholder="輸入中文會自動翻成日文，輸入日文會翻成中文... 按 Enter 傳送" autocomplete="off"></textarea>
                         <button id="btn-send-message" class="btn btn-primary">
                             <i class="fa-solid fa-paper-plane"></i>
@@ -347,9 +363,15 @@
             }
         };
     </script>
+    <!-- 全螢幕照片預覽對話框 -->
+    <div id="image-modal" class="modal-overlay" style="display: none; z-index: 9999;" onclick="closeImageModal()">
+        <span class="modal-close" style="position: absolute; top: 15px; right: 25px; color: white; font-size: 30px; cursor: pointer;">&times;</span>
+        <img id="image-modal-content" style="margin: auto; display: block; max-width: 90%; max-height: 90vh; border-radius: 8px;">
+    </div>
+
     <!-- Firebase SDK (跨瀏覽器即時同步) -->
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
-    <script src="chat.js?v=5.7"></script>
+    <script src="chat.js?v=5.8"></script>
 </body>
 </html>
