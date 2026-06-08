@@ -228,7 +228,7 @@ let appState = {
     uiLanguage: localStorage.getItem("feedback_chat_ui_lang") || "zh-TW",
     hideSystemMessages: localStorage.getItem("hide_system_messages") === "1",
     replyingTo: null,
-    pendingImage: null
+    pendingImages: []
 };
 
 function t(key, params = {}) {
@@ -1160,18 +1160,22 @@ function pruneOldMessages() {
     const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
 
     // 1. 釋放超過 7 天的照片容量，保留文字訊息
-    const expiredImageMsgs = appState.messages.filter(msg => msg.imageUrl && new Date(msg.timestamp).getTime() < sevenDaysAgo);
+    const expiredImageMsgs = appState.messages.filter(msg => (msg.imageUrl || (msg.imageUrls && msg.imageUrls.length > 0)) && new Date(msg.timestamp).getTime() < sevenDaysAgo);
     if (expiredImageMsgs.length > 0) {
         if (firebaseReady && db) {
             const updates = {};
             expiredImageMsgs.forEach(msg => {
-                updates["messages/" + sanitizeFirebaseKey(msg.id) + "/imageUrl"] = null;
+                const key = "messages/" + sanitizeFirebaseKey(msg.id);
+                if (msg.imageUrl) updates[key + "/imageUrl"] = null;
+                if (msg.imageUrls) updates[key + "/imageUrls"] = null;
                 msg.imageUrl = null; // 更新本地端
+                msg.imageUrls = null;
             });
             db.ref().update(updates);
         } else {
             expiredImageMsgs.forEach(msg => {
                 msg.imageUrl = null;
+                msg.imageUrls = null;
             });
             localStorage.setItem("feedback_chat_messages", JSON.stringify(appState.messages));
         }
@@ -1627,7 +1631,7 @@ function sendSystemNotice(text) {
 // -----------------------------------------------------------
 async function sendMessage() {
     const text = chatDom.chatMessageInput.value.trim();
-    if (!text && !appState.pendingImage) return;
+    if (!text && (!appState.pendingImages || appState.pendingImages.length === 0)) return;
 
     chatDom.chatMessageInput.value = "";
     chatDom.chatMessageInput.dispatchEvent(new Event("input"));
@@ -1658,8 +1662,8 @@ async function sendMessage() {
         cancelReply();
     }
 
-    if (appState.pendingImage) {
-        newMsg.imageUrl = appState.pendingImage;
+    if (appState.pendingImages && appState.pendingImages.length > 0) {
+        newMsg.imageUrls = [...appState.pendingImages];
         cancelImage();
     }
 
@@ -1880,14 +1884,24 @@ function renderMessages() {
             </div>`;
         }
 
-        // 照片渲染與 7 天過期判定
+        // 照片渲染與 7 天過期判定 (向下相容 imageUrl 與新版 imageUrls)
         let imageHtml = "";
-        if (msg.imageUrl) {
+        const urlsToRender = msg.imageUrls || (msg.imageUrl ? [msg.imageUrl] : []);
+        
+        if (urlsToRender.length > 0) {
             const isExpired = (Date.now() - new Date(msg.timestamp).getTime()) > 7 * 24 * 60 * 60 * 1000;
             if (isExpired) {
                 imageHtml = `<div class="expired-image"><i class="fa-solid fa-image-slash"></i> 已超過 7 天下載期限無法讀取</div>`;
             } else {
-                imageHtml = `<img src="${msg.imageUrl}" class="chat-image" onclick="openImageModal(this.src)" title="點擊放大">`;
+                let gridClass = "grid-1";
+                if (urlsToRender.length === 2) gridClass = "grid-2";
+                else if (urlsToRender.length >= 3) gridClass = "grid-multi";
+                
+                imageHtml = `<div class="chat-image-grid ${gridClass}">`;
+                urlsToRender.forEach(url => {
+                    imageHtml += `<img src="${url}" onclick="openImageModal(this.src)" title="點擊放大">`;
+                });
+                imageHtml += `</div>`;
             }
         }
 
@@ -1972,12 +1986,14 @@ window.recallSingleMessage = function(msgId) {
         msg.text = "";
         msg.translation = "";
         msg.imageUrl = null;
+        msg.imageUrls = null;
         
         updateMessageInStore(msgId, {
             isRecalled: true,
             text: "",
             translation: "",
-            imageUrl: null
+            imageUrl: null,
+            imageUrls: null
         });
         
         renderMessages();
@@ -2353,26 +2369,49 @@ window.scrollToMessage = function(msgId) {
 // -----------------------------------------------------------
 //  照片上傳與處理功能
 // -----------------------------------------------------------
-window.handleImageSelection = function(event) {
-    const file = event.target.files[0];
-    if (!file) return;
+window.handleImageSelection = async function(event) {
+    const files = Array.from(event.target.files);
+    if (!files.length) return;
 
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        compressImage(e.target.result, 800, 0.6, function(compressedBase64) {
-            appState.pendingImage = compressedBase64;
-            
-            // 顯示預覽區
-            const previewBar = document.getElementById("image-preview-bar");
-            const previewThumb = document.getElementById("image-preview-thumb");
-            if (previewBar && previewThumb) {
-                previewThumb.src = compressedBase64;
-                previewBar.style.display = "flex";
-            }
-            chatDom.chatMessageInput.focus();
+    if (files.length > 10) {
+        showToast("單次最多只能選擇 10 張照片，已自動為您擷取前 10 張。", "warning");
+    }
+    const filesToProcess = files.slice(0, 10);
+
+    const compressPromises = filesToProcess.map(file => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                compressImage(e.target.result, 800, 0.6, resolve);
+            };
+            reader.readAsDataURL(file);
         });
-    };
-    reader.readAsDataURL(file);
+    });
+
+    try {
+        const compressedResults = await Promise.all(compressPromises);
+        appState.pendingImages = compressedResults;
+        
+        // 顯示預覽區
+        const previewBar = document.getElementById("image-preview-bar");
+        const gallery = document.getElementById("image-preview-gallery");
+        const previewText = document.getElementById("image-preview-text");
+        
+        if (previewBar && gallery && previewText) {
+            gallery.innerHTML = "";
+            compressedResults.forEach(base64 => {
+                const img = document.createElement("img");
+                img.src = base64;
+                gallery.appendChild(img);
+            });
+            previewText.innerHTML = `<i class="fa-solid fa-images"></i> 已準備發送 ${compressedResults.length} 張照片...`;
+            previewBar.style.display = "flex";
+        }
+        chatDom.chatMessageInput.focus();
+    } catch (err) {
+        showToast("照片處理發生錯誤", "error");
+    }
+
     // 重置 input 以便下次能選同一張
     event.target.value = "";
 };
@@ -2400,10 +2439,14 @@ window.compressImage = function(base64Str, maxWidth, quality, callback) {
 };
 
 window.cancelImage = function() {
-    appState.pendingImage = null;
+    appState.pendingImages = [];
     const previewBar = document.getElementById("image-preview-bar");
+    const gallery = document.getElementById("image-preview-gallery");
     if (previewBar) {
         previewBar.style.display = "none";
+    }
+    if (gallery) {
+        gallery.innerHTML = "";
     }
 };
 
