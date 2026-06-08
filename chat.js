@@ -1835,10 +1835,27 @@ function renderMessages() {
         const timeStr = new Date(msg.timestamp).toLocaleString([], { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
         const isJa = detectJapanese(msg.text);
 
+        if (msg.isRecalled) {
+            row.innerHTML = `
+                <div class="recalled-msg-notice">
+                    <span>${msg.senderName} 已收回一則訊息</span>
+                </div>
+            `;
+            chatDom.messagesContainer.appendChild(row);
+            return; // 提早結束，不渲染後續對話泡泡
+        }
+
         // 管理員刪除按鈕
         const deleteBtnHtml = (appState.currentUser && appState.currentUser.role === "管理員") ?
             `<button class="btn-msg-action delete" title="刪除此訊息" onclick="deleteSingleMessage('${msg.id}')">
                 <i class="fa-solid fa-trash-can"></i>
+            </button>` : '';
+
+        // 撤回按鈕 (僅限本人且為今天的訊息)
+        const isToday = new Date(msg.timestamp).toDateString() === new Date().toDateString();
+        const recallBtnHtml = (isSelf && isToday) ? 
+            `<button class="btn-msg-recall" title="撤回訊息" onclick="recallSingleMessage('${msg.id}')">
+                <i class="fa-solid fa-rotate-left"></i>
             </button>` : '';
 
         // 回覆按鈕
@@ -1892,6 +1909,7 @@ function renderMessages() {
                 ${!isSelf ? `<span class="message-sender">${msg.senderName}</span>` : ''}
                 <span class="message-tag">${msg.senderRole}</span>
                 <span class="message-time">${timeStr}</span>
+                ${recallBtnHtml}
                 ${replyBtnHtml}
             </div>
             <div class="message-bubble">
@@ -1940,6 +1958,30 @@ window.deleteSingleMessage = function(msgId) {
     appState.messages = appState.messages.filter(m => m.id !== msgId);
     renderMessages();
     renderPrivateChannels();
+};
+
+// -----------------------------------------------------------
+//  使用者撤回訊息
+// -----------------------------------------------------------
+window.recallSingleMessage = function(msgId) {
+    if (!confirm("確定要撤回這則訊息嗎？撤回後將無法復原。")) return;
+    
+    const msg = appState.messages.find(m => m.id === msgId);
+    if (msg) {
+        msg.isRecalled = true;
+        msg.text = "";
+        msg.translation = "";
+        msg.imageUrl = null;
+        
+        updateMessageInStore(msgId, {
+            isRecalled: true,
+            text: "",
+            translation: "",
+            imageUrl: null
+        });
+        
+        renderMessages();
+    }
 };
 
 // -----------------------------------------------------------

@@ -1495,3 +1495,36 @@ body.hide-system-messages .system-msg-notice {
     border-color: rgba(255,255,255,0.3);
     color: rgba(255,255,255,0.8);
 }
+
+/* --- 撤回訊息樣式 --- */
+.recalled-msg-notice {
+    display: flex;
+    justify-content: center;
+    margin: 8px 0;
+    width: 100%;
+}
+.recalled-msg-notice span {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text-muted);
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    display: inline-block;
+}
+.btn-msg-recall {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 2px 6px;
+    opacity: 0;
+    transition: all 0.2s;
+}
+.message-row:hover .btn-msg-recall {
+    opacity: 1;
+}
+.btn-msg-recall:hover {
+    color: var(--accent-orange);
+    transform: scale(1.1);
+}
