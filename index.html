@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Outfit:wght@300;400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <!-- FontAwesome icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="chat.css?v=5.5">
+    <link rel="stylesheet" href="chat.css?v=5.6">
 </head>
 <body>
     <!-- 登入畫面 -->
@@ -85,7 +85,7 @@
                 <div class="header-title">
                     <h2 style="display: flex; align-items: center; gap: 8px;">
                         Feedback Translation Link
-                        <span class="version-badge" style="background: var(--accent-blue); color: #fff; font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; font-weight: 800; letter-spacing: 1px;">V5.5</span>
+                        <span class="version-badge" style="background: var(--accent-blue); color: #fff; font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; font-weight: 800; letter-spacing: 1px;">V5.6</span>
                     </h2>
                     <span data-i18n="app_subtitle">製造業現場中日雙向即時翻譯大廳</span>
                 </div>
@@ -226,6 +226,17 @@
                         </div>
                     </div>
 
+                    <!-- 訊息回覆預覽區 -->
+                    <div id="reply-preview-bar" class="reply-preview-bar" style="display: none;">
+                        <div class="reply-preview-content">
+                            <i class="fa-solid fa-reply"></i>
+                            <span id="reply-preview-text">回覆...</span>
+                        </div>
+                        <button class="btn-cancel-reply" onclick="cancelReply()">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+
                     <!-- 訊息輸入表單 -->
                     <div class="input-form">
                         <textarea id="chat-message-input" rows="2" data-i18n-placeholder="input_placeholder" placeholder="輸入中文會自動翻成日文，輸入日文會翻成中文... 按 Enter 傳送" autocomplete="off"></textarea>
@@ -339,6 +350,6 @@
     <!-- Firebase SDK (跨瀏覽器即時同步) -->
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
-    <script src="chat.js?v=5.5"></script>
+    <script src="chat.js?v=5.6"></script>
 </body>
 </html>

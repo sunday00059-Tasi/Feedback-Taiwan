@@ -226,7 +226,8 @@ let appState = {
     unreadCounts: {},
     lastRead: {},
     uiLanguage: localStorage.getItem("feedback_chat_ui_lang") || "zh-TW",
-    hideSystemMessages: localStorage.getItem("hide_system_messages") === "1"
+    hideSystemMessages: localStorage.getItem("hide_system_messages") === "1",
+    replyingTo: null
 };
 
 function t(key, params = {}) {
@@ -1629,6 +1630,15 @@ async function sendMessage() {
         hasError: false
     };
 
+    if (appState.replyingTo) {
+        newMsg.replyTo = {
+            id: appState.replyingTo.id,
+            text: appState.replyingTo.text,
+            senderName: appState.replyingTo.senderName
+        };
+        cancelReply();
+    }
+
     // 先儲存初始狀態
     saveMessageToStore(newMsg);
     if (!firebaseReady) {
@@ -1795,6 +1805,7 @@ function renderMessages() {
 
         const isSelf = msg.senderId === appState.activeUserSim;
         const row = document.createElement("div");
+        row.id = msg.id;
         row.className = `message-row ${isSelf ? 'self' : 'other'}`;
 
         const timeStr = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -1806,6 +1817,9 @@ function renderMessages() {
                 <i class="fa-solid fa-trash-can"></i>
             </button>` : '';
 
+        // 回覆按鈕
+        const replyBtnHtml = `<button class="btn-msg-reply" title="回覆此訊息" onclick="setReplyTo('${msg.id}', '${msg.senderName}', '${msg.text.replace(/'/g, "\\'")}')"><i class="fa-solid fa-reply"></i></button>`;
+
         // 翻譯狀態樣式
         let translationClass = "";
         let translationContent = msg.translation || "";
@@ -1816,13 +1830,24 @@ function renderMessages() {
             translationClass = "translation-error";
         }
 
+        // 被引用的回覆區塊
+        let replyQuoteHtml = "";
+        if (msg.replyTo) {
+            replyQuoteHtml = `<div class="reply-quote" onclick="scrollToMessage('${msg.replyTo.id}')" title="點擊跳至原始訊息">
+                <i class="fa-solid fa-reply" style="font-size: 0.7em; margin-right: 4px;"></i> 
+                <strong>${msg.replyTo.senderName}</strong>：${msg.replyTo.text}
+            </div>`;
+        }
+
         row.innerHTML = `
             <div class="message-meta">
                 ${!isSelf ? `<span class="message-sender">${msg.senderName}</span>` : ''}
                 <span class="message-tag">${msg.senderRole}</span>
                 <span class="message-time">${timeStr}</span>
+                ${replyBtnHtml}
             </div>
             <div class="message-bubble">
+                ${replyQuoteHtml}
                 <div class="text-original">
                     <span class="lang-flag">${isJa ? '日' : '中'}</span>
                     <span class="msg-text">${msg.text}</span>
@@ -2199,5 +2224,43 @@ window.clearAllSystemMessages = function() {
         localStorage.setItem("feedback_chat_messages", JSON.stringify(appState.messages));
         renderMessages();
         showToast("已清除所有登入紀錄", "success");
+    }
+};
+
+// -----------------------------------------------------------
+//  回覆訊息功能
+// -----------------------------------------------------------
+window.setReplyTo = function(msgId, senderName, text) {
+    appState.replyingTo = { id: msgId, senderName: senderName, text: text };
+    
+    const previewBar = document.getElementById("reply-preview-bar");
+    const previewText = document.getElementById("reply-preview-text");
+    if (previewBar && previewText) {
+        previewText.textContent = `回覆 ${senderName}：${text}`;
+        previewBar.style.display = "flex";
+    }
+    chatDom.chatMessageInput.focus();
+};
+
+window.cancelReply = function() {
+    appState.replyingTo = null;
+    const previewBar = document.getElementById("reply-preview-bar");
+    if (previewBar) {
+        previewBar.style.display = "none";
+    }
+};
+
+window.scrollToMessage = function(msgId) {
+    // 尋找 DOM 中的訊息 (由於我們沒有把 ID 放在外層，所以要透過某種方式尋找。
+    // 在 renderMessages() 中，我們會需要把 msg.id 綁在 element 上)
+    const el = document.getElementById(msgId);
+    if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add("msg-highlight");
+        setTimeout(() => {
+            el.classList.remove("msg-highlight");
+        }, 2000);
+    } else {
+        showToast("找不到該則原始訊息 (可能已被刪除或捲動過多)", "warning");
     }
 };
